@@ -13,7 +13,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 import torchvision.transforms as transforms
-from torchvision.datasets import ImageNet
+from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 import utils
@@ -74,7 +74,7 @@ def run(config):
   # Create transforms
   train_transform = [utils.CenterCropLongEdge(), transforms.Resize(config['image_size']), transforms.ToTensor(), utils.Apply2WT64(filters)]
 
-  train_dataset = ImageNet(root=config['data_root'], split='train', download=None, transform=train_transform)
+  train_dataset = ImageFolder(root=config['data_root'], transform=train_transform)
   train_loader = DataLoader(train_dataset,
                             batch_size=config['batch_size'],
                             shuffle=False,
