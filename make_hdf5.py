@@ -28,6 +28,9 @@ def prepare_parser():
     '--image_size', type=int, default=256,
     help='Image size')
   parser.add_argument(
+    '--wt_image_size', type=int, default=64,
+    help='WTed image size')
+  parser.add_argument(
     '--data_root', type=str, default='data',
     help='Default location where data is stored (default: %(default)s)')
   parser.add_argument(
@@ -103,8 +106,8 @@ def run(config):
     if i==0:
       with h5.File(config['output_dir'] + '/ILSVRC%i.hdf5' % config['image_size'], 'w') as f:
         print('Producing dataset of len %d' % len(train_loader.dataset))
-        imgs_dset = f.create_dataset('imgs', x.shape,dtype='uint8', maxshape=(len(train_loader.dataset), 3, config['image_size'], config['image_size']),
-                                     chunks=(config['chunk_size'], 3, config['image_size'], config['image_size']), compression=config['compression']) 
+        imgs_dset = f.create_dataset('imgs', x.shape,dtype='uint8', maxshape=(len(train_loader.dataset), 3, config['wt_image_size'], config['wt_image_size']),
+                                     chunks=(config['chunk_size'], 3, config['wt_image_size'], config['wt_image_size']), compression=config['compression']) 
         print('Image chunks chosen as ' + str(imgs_dset.chunks))
         imgs_dset[...] = x
         labels_dset = f.create_dataset('labels', y.shape, dtype='int64', maxshape=(len(train_loader.dataset),), chunks=(config['chunk_size'],), compression=config['compression'])
