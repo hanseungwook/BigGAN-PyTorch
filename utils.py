@@ -17,6 +17,7 @@ import json
 import pickle
 from argparse import ArgumentParser
 import animal_hash
+import pywt
 
 import torch
 import torch.nn as nn
