@@ -72,7 +72,10 @@ def run(config):
   filters = utils.create_filters(device='cpu')
 
   # Create transforms
-  train_transform = [utils.CenterCropLongEdge(), transforms.Resize(config['image_size']), transforms.ToTensor(), utils.Apply2WT64(filters)]
+  train_transform = transforms.Compose([utils.CenterCropLongEdge(), 
+                                        transforms.Resize(config['image_size']), 
+                                        transforms.ToTensor(), 
+                                        utils.Apply2WT64(filters)])
 
   train_dataset = ImageFolder(root=config['data_root'], transform=train_transform)
   train_loader = DataLoader(train_dataset,
