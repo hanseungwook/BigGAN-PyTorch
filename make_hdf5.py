@@ -13,6 +13,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 import torchvision.transforms as transforms
+from torchvision.datasets import ImageNet
 from torch.utils.data import DataLoader
 
 import utils
@@ -21,9 +22,11 @@ def prepare_parser():
   usage = 'Parser for ImageNet HDF5 scripts.'
   parser = ArgumentParser(description=usage)
   parser.add_argument(
-    '--dataset', type=str, default='I128',
-    help='Which Dataset to train on, out of I128, I256, C10, C100;'
-         'Append "_hdf5" to use the hdf5 version for ISLVRC (default: %(default)s)')
+    '--dataset', type=str, default='train',
+    help='Which dataset to convert to hdf5: train / valid')
+  parser.add_argument(
+    '--image_size', type=int, default=256,
+    help='Image size')
   parser.add_argument(
     '--data_root', type=str, default='data',
     help='Default location where data is stored (default: %(default)s)')
@@ -48,19 +51,31 @@ def run(config):
                      'about to overwrite! Override this error only if you know '
                      'what you''re doing!')
   # Get image size
-  config['image_size'] = utils.imsize_dict[config['dataset']]
+  # config['image_size'] = utils.imsize_dict[config['dataset']]
 
   # Update compression entry
   config['compression'] = 'lzf' if config['compression'] else None #No compression; can also use 'lzf' 
 
   # Get dataset
-  kwargs = {'num_workers': config['num_workers'], 'pin_memory': False, 'drop_last': False}
-  train_loader = utils.get_data_loaders(dataset=config['dataset'],
-                                        batch_size=config['batch_size'],
-                                        shuffle=False,
-                                        data_root=config['data_root'],
-                                        use_multiepoch_sampler=False,
-                                        **kwargs)[0]     
+  kwargs = {'num_workers': config['num_workers'], 'pin_memory': False, 'drop_last': True}
+  # train_loader = utils.get_data_loaders(dataset=config['dataset'],
+  #                                       batch_size=config['batch_size'],
+  #                                       shuffle=False,
+  #                                       data_root=config['data_root'],
+  #                                       use_multiepoch_sampler=False,
+  #                                       **kwargs)[0]    
+
+  # Create WT filter
+  filters = utils.create_filters(device='cpu')
+
+  # Create transforms
+  train_transform = [utils.CenterCropLongEdge(), transforms.Resize(config['image_size']), transforms.ToTensor(), utils.Apply2WT64(filters)]
+
+  train_dataset = ImageNet(root=config['data_root'], split='train', download=None, transform=train_transform)
+  train_loader = DataLoader(train_dataset,
+                            batch_size=config['batch_size'],
+                            shuffle=False,
+                            **kwargs)
 
   # HDF5 supports chunking and compression. You may want to experiment 
   # with different chunk sizes to see how it runs on your machines.
@@ -75,8 +90,7 @@ def run(config):
   print('Starting to load %s into an HDF5 file with chunk size %i and compression %s...' % (config['dataset'], config['chunk_size'], config['compression']))
   # Loop over train loader
   for i,(x,y) in enumerate(tqdm(train_loader)):
-    # Stick X into the range [0, 255] since it's coming from the train loader
-    x = (255 * ((x + 1) / 2.0)).byte().numpy()
+    x = x.byte().numpy()
     # Numpyify y
     y = y.numpy()
     # If we're on the first batch, prepare the hdf5

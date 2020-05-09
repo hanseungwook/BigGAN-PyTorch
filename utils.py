@@ -431,6 +431,58 @@ activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
                    'ir': nn.ReLU(inplace=True),}
 
+# WT filter creating function
+def create_filters(device, wt_fn='bior2.2'):
+    w = pywt.Wavelet(wt_fn)
+
+    dec_hi = torch.Tensor(w.dec_hi[::-1]).to(device)
+    dec_lo = torch.Tensor(w.dec_lo[::-1]).to(device)
+
+    filters = torch.stack([dec_lo.unsqueeze(0)*dec_lo.unsqueeze(1),
+                           dec_lo.unsqueeze(0)*dec_hi.unsqueeze(1),
+                           dec_hi.unsqueeze(0)*dec_lo.unsqueeze(1),
+                           dec_hi.unsqueeze(0)*dec_hi.unsqueeze(1)], dim=0)
+
+    return filters
+
+# WT function
+def wt(vimg, filters, levels=1):
+    bs = vimg.shape[0]
+    h = vimg.size(2)
+    w = vimg.size(3)
+    vimg = vimg.reshape(-1, 1, h, w)
+    padded = torch.nn.functional.pad(vimg,(2,2,2,2))
+    res = torch.nn.functional.conv2d(padded, Variable(filters[:,None]),stride=2)
+    if levels>1:
+        res[:,:1] = wt(res[:,:1], filters, levels-1)
+        res[:,:1,32:,:] = res[:,:1,32:,:]*1.
+        res[:,:1,:,32:] = res[:,:1,:,32:]*1.
+        res[:,1:] = res[:,1:]*1.
+    res = res.view(-1,2,h//2,w//2).transpose(1,2).contiguous().view(-1,1,h,w)
+    return res.reshape(bs, -1, h, w)
+
+class Apply2WT64(object):
+  """Crops the given PIL Image on the long edge.
+  Args:
+      size (sequence or int): Desired output size of the crop. If size is an
+          int instead of sequence like (h, w), a square crop (size, size) is
+          made.
+  """
+  def __init__(self, filters):
+    self.filters = filters
+
+  def __call__(self, img):
+    """
+    Args:
+        img (tensor): Image to be applied WT and extracted only 64x64.
+    Returns:
+        Tensor: 64x64 WT'ed image.
+    """
+    return wt(img.unsqueeze(0), self.filters, levels=2).squeeze()[:, :64, :64]
+
+  def __repr__(self):
+    return self.__class__.__name__
+
 class CenterCropLongEdge(object):
   """Crops the given PIL Image on the long edge.
   Args:
