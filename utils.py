@@ -620,7 +620,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
         # Create WT filters
         filters = create_filters(device='cpu')
         train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(config['image_size']), 
+                           transforms.Resize(image_size*4), # 64*4 = 256
                            transforms.ToTensor(), 
                            Apply2WT64(filters)]
         # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
