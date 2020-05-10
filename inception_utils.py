@@ -21,6 +21,8 @@ import torch.nn.functional as F
 from torch.nn import Parameter as P
 from torchvision.models.inception import inception_v3
 
+from utils import create_inv_filters, zero_pad, get_norm_dict
+
 
 # Module that wraps the inception network to enable use with dataparallel and
 # returning pool features and logits.
@@ -247,14 +249,30 @@ def calculate_inception_score(pred, num_splits=10):
 # Inception Accuracy the labels of the generated class will be needed)
 def accumulate_inception_activations(sample, net, num_inception_images=50000):
   pool, logits, labels = [], [], []
+  pool_iwt, logits_iwt, labels_iwt = [], [], []
+  inv_filters = create_inv_filters('cuda')
+  norm_dict = get_norm_dict()
+
   while (torch.cat(logits, 0).shape[0] if len(logits) else 0) < num_inception_images:
     with torch.no_grad():
       images, labels_val = sample()
+
+      # Clone, denormalize, pad to 256, and IWT twice
+      images_full = images.clone()
+      images_full = denormalize(images_full, norm_dict['shift'], norm_dict['scale'])
+      images_full = zero_pad(images, 256, images.device) # Full image size hard-coded
+      images_full = iwt(images_full, inv_filters, levels=2)
+
       pool_val, logits_val = net(images.float())
       pool += [pool_val]
       logits += [F.softmax(logits_val, 1)]
       labels += [labels_val]
-  return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0)
+
+      pool_val_iwt, logits_val_iwt = net(images_full.float())
+      pool_iwt += [pool_val_iwt]
+      logits_iwt += [F.softmax(logits_val_iwt, 1)]
+      labels_iwt += [labels_val_iwt]
+  return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0), torch.cat(pool_iwt, 0), torch.cat(logits_iwt, 0), torch.cat(labels_iwt, 0)
 
 
 # Load and wrap the Inception model
@@ -276,18 +294,23 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
   # the script will crash here if it cannot find the Inception moments.
   # By default, remove the "hdf5" from dataset
   dataset = dataset.strip('_hdf5')
-  data_mu = np.load(dataset+'_inception_moments.npz')['mu']
-  data_sigma = np.load(dataset+'_inception_moments.npz')['sigma']
+  data_mu = np.load(dataset+'_wt_inception_moments.npz')['mu']
+  data_sigma = np.load(dataset+'_wt_inception_moments.npz')['sigma']
+
+  data_mu_iwt = np.load(dataset+'_iwt_inception_moments.npz')['mu']
+  data_sigma_iwt = np.load(dataset+'_iwt_inception_moments.npz')['sigma']
+
   # Load network
   net = load_inception_net(parallel)
   def get_inception_metrics(sample, num_inception_images, num_splits=10, 
                             prints=True, use_torch=True):
     if prints:
       print('Gathering activations...')
-    pool, logits, labels = accumulate_inception_activations(sample, net, num_inception_images)
+    pool, logits, labels, pool_iwt, logits_iwt, labels_iwt = accumulate_inception_activations(sample, net, num_inception_images)
     if prints:  
       print('Calculating Inception Score...')
     IS_mean, IS_std = calculate_inception_score(logits.cpu().numpy(), num_splits)
+    IS_mean_iwt, IS_std_iwt = calculate_inception_score(logits_iwt.cpu().numpy(), num_splits)
     if no_fid:
       FID = 9999.0
     else:
@@ -295,16 +318,21 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
         print('Calculating means and covariances...')
       if use_torch:
         mu, sigma = torch.mean(pool, 0), torch_cov(pool, rowvar=False)
+        mu_iwt, sigma_iwt = torch.mean(pool_iwt, 0), torch_cov(pool_iwt, rowvar=False)
       else:
         mu, sigma = np.mean(pool.cpu().numpy(), axis=0), np.cov(pool.cpu().numpy(), rowvar=False)
+        mu_iwt, sigma_iwt = np.mean(pool_iwt.cpu().numpy(), axis=0), np.cov(pool_iwt.cpu().numpy(), rowvar=False)
       if prints:
         print('Covariances calculated, getting FID...')
       if use_torch:
         FID = torch_calculate_frechet_distance(mu, sigma, torch.tensor(data_mu).float().cuda(), torch.tensor(data_sigma).float().cuda())
         FID = float(FID.cpu().numpy())
+        FID_iwt = torch_calculate_frechet_distance(mu_iwt, sigma_iwt, torch.tensor(data_mu_iwt).float().cuda(), torch.tensor(data_sigma_iwt).float().cuda())
+        FID_iwt = float(FID.cpu().numpy())
       else:
         FID = numpy_calculate_frechet_distance(mu.cpu().numpy(), sigma.cpu().numpy(), data_mu, data_sigma)
+        FID_iwt = numpy_calculate_frechet_distance(mu_iwt.cpu().numpy(), sigma_iwt.cpu().numpy(), data_mu_iwt, data_sigma_iwt)
     # Delete mu, sigma, pool, logits, and labels, just in case
     del mu, sigma, pool, logits, labels
-    return IS_mean, IS_std, FID
+    return IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt
   return get_inception_metrics

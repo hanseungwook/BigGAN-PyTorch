@@ -63,7 +63,7 @@ def run(config):
   print('Minimum: {} \t Maximum: {}\nShift: {} \t Scale: {}'.format(min_val, max_val, shift, scale))
   
   print('Saving normalization values to disk...')
-  np.savez(config['dataset'].strip('_hdf5')+'_norm_values.npz', **{'min' : min_val, 'max' : max_val, 'shift': shift, 'scale': scale})
+  np.savez(config['dataset'].strip('_hdf5')+'_norm_values.npz', **{'min' : min_val.cpu(), 'max' : max_val.cpu(), 'shift': shift.cpu(), 'scale': scale.cpu()})
 
 def main():
   # parse command line    
