@@ -50,6 +50,8 @@ def run(config):
   min_val = float('inf')
   max_val = float('-inf')
   for i, (x, y) in enumerate(tqdm(loaders[0])):
+    if i == 0:
+      print(y)
     min_val = min(min_val, torch.min(x))
     max_val = max(max_val, torch.max(x))
 
