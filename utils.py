@@ -433,6 +433,7 @@ classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I256': 20, 'I256_hdf5': 20,
                           'WT64': 50, 'WT64_hdf5': 50,
                           'C10': 10, 'C100': 100}
+
 activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
                    'ir': nn.ReLU(inplace=True),}
@@ -466,6 +467,7 @@ def wt(vimg, filters, levels=1):
         res[:,1:] = res[:,1:]*1.
     res = res.view(-1,2,h//2,w//2).transpose(1,2).contiguous().view(-1,1,h,w)
     return res.reshape(bs, -1, h, w)
+  
 
 class Apply2WT64(object):
   """Crops the given PIL Image on the long edge.
@@ -616,7 +618,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
         train_transform = []
       else:
         # Create WT filters
-        filters = utils.create_filters(device='cpu')
+        filters = create_filters(device='cpu')
         train_transform = [utils.CenterCropLongEdge(), 
                            transforms.Resize(config['image_size']), 
                            transforms.ToTensor(), 
