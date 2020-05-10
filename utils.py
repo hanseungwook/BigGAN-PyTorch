@@ -407,19 +407,19 @@ dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder,
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
-             'WT64_hdf5': dset.ILSVRC_HDF5,
+             'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ILSVRC_HDF5,
              'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I64': 64, 'I64_hdf5': 64,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
-               'WT64_hdf5': 64}
+               'WT64': 64, 'WT64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
              'I128': 'ImageNet', 'I128_hdf5': 'ILSVRC128.hdf5',
              'I256': 'ImageNet', 'I256_hdf5': 'ILSVRC256.hdf5',
-             'WT64_hdf5': 'ILSVRC256.hdf5',
+             'WT64': 'ImageNet', 'WT64_hdf5': 'ILSVRC256.hdf5',
              'C10': 'cifar', 'C100': 'cifar'}
 nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
@@ -431,7 +431,7 @@ classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
-                          'WT64_hdf5': 50,
+                          'WT64': 50, 'WT64_hdf5': 50,
                           'C10': 10, 'C100': 100}
 activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
@@ -615,11 +615,15 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       if dataset in ['C10', 'C100']:
         train_transform = []
       else:
-        train_transform = [CenterCropLongEdge(), transforms.Resize(image_size)]
-      # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
-    train_transform = transforms.Compose(train_transform + [
-                     transforms.ToTensor(),
-                     transforms.Normalize(norm_mean, norm_std)])
+        # Create WT filters
+        filters = utils.create_filters(device='cpu')
+        train_transform = [utils.CenterCropLongEdge(), 
+                           transforms.Resize(config['image_size']), 
+                           transforms.ToTensor(), 
+                           Apply2WT64(filters)]
+        # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
+    train_transform = transforms.Compose(train_transform)
+    
   train_set = which_dataset(root=data_root, transform=train_transform,
                             load_in_mem=load_in_mem, **dataset_kwargs)
 
