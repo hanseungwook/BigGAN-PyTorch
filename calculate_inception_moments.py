@@ -64,7 +64,7 @@ def run(config):
   inv_filters = utils.create_inv_filters(device=device)
 
   norm_dict = utils.load_norm_dict(config['norm_path'])
-  shift, scale = torch.from_numpy(norm_dict['shift']), torch.from_numpy(norm_dict['scale'])
+  shift, scale = torch.from_numpy(norm_dict['shift']).to(device), torch.from_numpy(norm_dict['scale']).to(device)
 
   for i, (x, y) in enumerate(tqdm(loaders[0])):
     x = utils.wt(x.to(device), filters, levels=2)[:, :, :64, :64]
