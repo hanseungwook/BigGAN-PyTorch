@@ -5,9 +5,9 @@
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err
 
-#SBATCH -J train_vqvae
-#SBATCH -o train_vqvae_%j.out
-#SBATCH -e train_vqvae_%j.err
+#SBATCH -J calc_norm
+#SBATCH -o calc_norm_%j.out
+#SBATCH -e calc_norm_%j.err
 
 #SBATCH --mail-user=seungwook.han@ibm.com
 #SBATCH --mail-type=ALL
@@ -63,11 +63,6 @@ date
 ###  check queuue using command 'squeue'
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
-
-if [ "$#" -ne 1 ]; then
-      echo "Command line arguments (1: output_dir) not passed"
-      exit 1
-fi
 
 python calculate_norm_values.py \
 --dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
