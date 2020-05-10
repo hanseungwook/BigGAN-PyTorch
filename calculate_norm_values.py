@@ -11,6 +11,7 @@ import utils
 import inception_utils
 from tqdm import tqdm, trange
 from argparse import ArgumentParser
+import utils
 
 def prepare_parser():
   usage = 'Calculate and store inception metrics.'
@@ -47,9 +48,12 @@ def run(config):
   config['drop_last'] = False
   loaders = utils.get_data_loaders(**config)
 
+  device = 'cuda'
+  filters = utils.create_filters(device=device)
   min_val = float('inf')
   max_val = float('-inf')
   for i, (x, y) in enumerate(tqdm(loaders[0])):
+    x = utils.wt(x.to(device), filters, levels=2)[:, :, :64, :64]
     min_val = min(min_val, torch.min(x))
     max_val = max(max_val, torch.max(x))
 

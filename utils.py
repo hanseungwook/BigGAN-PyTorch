@@ -592,8 +592,8 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
-  norm_mean = [0.5,0.5,0.5]
-  norm_std = [0.5,0.5,0.5]
+  # norm_mean = [0.5,0.5,0.5]
+  # norm_std = [0.5,0.5,0.5]
   image_size = imsize_dict[dataset]
   # For image folder datasets, name of the file where we store the precomputed
   # image locations to avoid having to walk the dirs every time we load.
@@ -617,12 +617,9 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       if dataset in ['C10', 'C100']:
         train_transform = []
       else:
-        # Create WT filters
-        filters = create_filters(device='cpu')
         train_transform = [CenterCropLongEdge(), 
                            transforms.Resize(image_size*4), # 64*4 = 256
-                           transforms.ToTensor(), 
-                           Apply2WT64(filters)]
+                           transforms.ToTensor()]
         # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
     train_transform = transforms.Compose(train_transform)
     
