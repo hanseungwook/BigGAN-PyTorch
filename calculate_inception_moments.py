@@ -27,6 +27,9 @@ def prepare_parser():
     '--data_root', type=str, default='data',
     help='Default location where data is stored (default: %(default)s)') 
   parser.add_argument(
+    '--norm_path', type=str, default='./',
+    help='Default location where norm values file is stored (default: %(default)s)') 
+  parser.add_argument(
     '--batch_size', type=int, default=64,
     help='Default overall batchsize (default: %(default)s)')
   parser.add_argument(

@@ -66,6 +66,7 @@ date
 
 python calculate_inception_moments.py \
 --dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
 --parallel --shuffle
 
 echo "Run completed at:- "
