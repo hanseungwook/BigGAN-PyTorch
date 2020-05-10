@@ -47,11 +47,9 @@ def run(config):
   config['drop_last'] = False
   loaders = utils.get_data_loaders(**config)
 
-  device = 'cuda'
   min_val = float('inf')
   max_val = float('-inf')
   for i, (x, y) in enumerate(tqdm(loaders[0])):
-    x = x.to(device)
     min_val = min(min_val, torch.min(x))
     max_val = max(max_val, torch.max(x))
 
