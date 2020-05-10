@@ -252,6 +252,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
   pool_iwt, logits_iwt, labels_iwt = [], [], []
   inv_filters = create_inv_filters('cuda')
   norm_dict = get_norm_dict()
+  shift, scale = torch.from_numpy(norm_dict['shift']), torch.from_numpy(norm_dict['scale'])
 
   while (torch.cat(logits, 0).shape[0] if len(logits) else 0) < num_inception_images:
     with torch.no_grad():
@@ -259,7 +260,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
 
       # Clone, denormalize, pad to 256, and IWT twice
       images_full = images.clone()
-      images_full = denormalize(images_full, norm_dict['shift'], norm_dict['scale'])
+      images_full = denormalize(images_full, shift.cuda(), scale.cuda())
       images_full = zero_pad(images, 256, images.device) # Full image size hard-coded
       images_full = iwt(images_full, inv_filters, levels=2)
 
