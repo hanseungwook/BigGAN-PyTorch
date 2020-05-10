@@ -66,7 +66,7 @@ date
 
 python calculate_inception_moments.py \
 --dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
---parallel --shuffle \ 
+--parallel --shuffle
 
 echo "Run completed at:- "
 date
