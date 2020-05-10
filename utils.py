@@ -506,7 +506,7 @@ def denormalize(x, shift, scale):
   return x*scale - shift
     
 def normalize(x, shift, scale):
-  return (data + shift) / scale
+  return (x + shift) / scale
   
 def load_norm_dict(path):
   loaded = np.load(path)
