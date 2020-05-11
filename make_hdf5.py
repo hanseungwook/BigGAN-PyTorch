@@ -71,14 +71,10 @@ def run(config):
   #                                       use_multiepoch_sampler=False,
   #                                       **kwargs)[0]    
 
-  # Create WT filter
-  filters = utils.create_filters(device='cpu')
-
   # Create transforms
   train_transform = transforms.Compose([utils.CenterCropLongEdge(), 
                                         transforms.Resize(config['image_size']), 
-                                        transforms.ToTensor(), 
-                                        utils.Apply2WT64(filters)])
+                                        transforms.ToTensor()])
 
   train_dataset = ImageFolder(root=config['data_root'], transform=train_transform)
   train_loader = DataLoader(train_dataset,
