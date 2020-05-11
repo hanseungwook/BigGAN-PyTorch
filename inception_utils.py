@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from torch.nn import Parameter as P
 from torchvision.models.inception import inception_v3
 
-from utils import create_inv_filters, zero_pad, get_norm_dict
+from utils import create_inv_filters, zero_pad, get_norm_dict, denormalize
 
 
 # Module that wraps the inception network to enable use with dataparallel and
