@@ -272,7 +272,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
       pool_val_iwt, logits_val_iwt = net(images_full.float())
       pool_iwt += [pool_val_iwt]
       logits_iwt += [F.softmax(logits_val_iwt, 1)]
-      labels_iwt += [labels_val_iwt]
+      labels_iwt += [labels_val]
   return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0), torch.cat(pool_iwt, 0), torch.cat(logits_iwt, 0), torch.cat(labels_iwt, 0)
 
 
