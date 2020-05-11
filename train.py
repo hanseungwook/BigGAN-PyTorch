@@ -29,7 +29,6 @@ import losses
 import train_fns
 from sync_batchnorm import patch_replication_callback
 
-
 # The main training file. Config is a dictionary specifying the configuration
 # of this training run.
 def run(config):
@@ -72,7 +71,6 @@ def run(config):
   # Next, build the model
   G = model.Generator(**config).to(device)
   D = model.Discriminator(**config).to(device)
-  
    # If using EMA, prepare it
   if config['ema']:
     print('Preparing EMA for G with decay of {}'.format(config['ema_decay']))
@@ -170,7 +168,7 @@ def run(config):
   filters = utils.create_filters(device)
 
   norm_dict = utils.load_norm_dict(config['norm_path'])
-  shift, scale = norm_dict['shift'], norm_dict['scale']
+  shift, scale = torch.from_numpy(norm_dict['shift']).to(device), torch.from_numpy(norm_dict['scale']).to(device)
 
   print('Beginning training at epoch %d...' % state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
@@ -182,7 +180,7 @@ def run(config):
       pbar = tqdm(loaders[0])
     for i, (x, y) in enumerate(pbar):
       start_time = time.time()
-
+      
       # Increment the iteration counter
       state_dict['itr'] += 1
       # Make sure G and D are in training mode, just in case they got set to eval
@@ -197,9 +195,10 @@ def run(config):
         x, y = x.to(device), y.to(device)
 
       # Get 64x64 WT patch and normalize
-      x = wt(x, filters, levels=2)[:, :, :64, :64]
+      x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
       x = utils.normalize(x, shift, scale)
-
+      torch.cuda.empty_cache()
+      
       metrics = train(x, y)
       end_time = time.time()
       train_log.log(itr=int(state_dict['itr']), itr_time=(end_time-start_time), **metrics)
