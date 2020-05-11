@@ -197,7 +197,7 @@ def run(config):
         x, y = x.to(device), y.to(device)
 
       # Get 64x64 WT patch and normalize
-      x = wt(x, filters, levels=2)[:, :, :64, :64]
+      x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
       x = utils.normalize(x, shift, scale)
 
       metrics = train(x, y)
