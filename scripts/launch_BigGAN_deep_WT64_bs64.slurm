@@ -14,7 +14,7 @@
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
@@ -66,10 +66,10 @@ date
 
 python train.py \
 --model BigGANdeep \
---dataset WT64 --shuffle  --num_workers 8 --batch_size 128 \
+--dataset WT64 --shuffle  --num_workers 8 --batch_size 64 \
 --base_root /nobackup/users/swhan/BigGAN-PyTorch/results/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
---num_G_accumulations 2 --num_D_accumulations 2 \
+--num_G_accumulations 1 --num_D_accumulations 1 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
 --G_attn 64 --D_attn 64 \
 --G_ch 128 --D_ch 128 \
@@ -83,6 +83,7 @@ python train.py \
 --ema --use_ema --ema_start 20000 --G_eval_mode \
 --test_every 2000 --save_every 500 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
+--resume --load_weights copy1
 
 echo "Run completed at:- "
 date
