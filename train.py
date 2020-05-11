@@ -198,7 +198,7 @@ def run(config):
 
       # Get 64x64 WT patch and normalize
       x = wt(x, filters, levels=2)[:, :, :64, :64]
-      x = utils.normalize(shift, scale)
+      x = utils.normalize(x, shift, scale)
 
       metrics = train(x, y)
       end_time = time.time()
