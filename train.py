@@ -43,6 +43,7 @@ def run(config):
   config['n_classes'] = utils.nclass_dict[config['dataset']]
   config['G_activation'] = utils.activation_dict[config['G_nl']]
   config['D_activation'] = utils.activation_dict[config['D_nl']]
+  data_dir = config['data_root']
   # By default, skip init if resuming training.
   if config['resume']:
     print('Skipping initialization for training resumption...')
@@ -55,6 +56,9 @@ def run(config):
 
   # Prepare root folders if necessary
   utils.prepare_root(config)
+  
+  # Update data directory to Satori version
+  config['data_root'] = data_dir
 
   # Setup cudnn.benchmark for free speed
   torch.backends.cudnn.benchmark = True
