@@ -314,6 +314,7 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
     IS_mean_iwt, IS_std_iwt = calculate_inception_score(logits_iwt.cpu().numpy(), num_splits)
     if no_fid:
       FID = 9999.0
+      FID_iwt = 9999.0
     else:
       if prints:
         print('Calculating means and covariances...')
@@ -329,11 +330,11 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
         FID = torch_calculate_frechet_distance(mu, sigma, torch.tensor(data_mu).float().cuda(), torch.tensor(data_sigma).float().cuda())
         FID = float(FID.cpu().numpy())
         FID_iwt = torch_calculate_frechet_distance(mu_iwt, sigma_iwt, torch.tensor(data_mu_iwt).float().cuda(), torch.tensor(data_sigma_iwt).float().cuda())
-        FID_iwt = float(FID.cpu().numpy())
+        FID_iwt = float(FID_iwt.cpu().numpy())
       else:
         FID = numpy_calculate_frechet_distance(mu.cpu().numpy(), sigma.cpu().numpy(), data_mu, data_sigma)
         FID_iwt = numpy_calculate_frechet_distance(mu_iwt.cpu().numpy(), sigma_iwt.cpu().numpy(), data_mu_iwt, data_sigma_iwt)
     # Delete mu, sigma, pool, logits, and labels, just in case
-    del mu, sigma, pool, logits, labels
+    del mu, sigma, pool, logits, labels, mu_iwt, sigma_iwt, pool_iwt, logits_iwt, labels_iwt
     return IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt
   return get_inception_metrics
