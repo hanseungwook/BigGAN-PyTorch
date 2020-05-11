@@ -12,7 +12,7 @@ import functools
 import math
 import numpy as np
 from tqdm import tqdm, trange
-
+import time
 
 import torch
 import torch.nn as nn
@@ -28,6 +28,7 @@ import utils
 import losses
 import train_fns
 from sync_batchnorm import patch_replication_callback
+
 
 # The main training file. Config is a dictionary specifying the configuration
 # of this training run.
@@ -176,6 +177,8 @@ def run(config):
     else:
       pbar = tqdm(loaders[0])
     for i, (x, y) in enumerate(pbar):
+      start_time = time.time()
+
       # Increment the iteration counter
       state_dict['itr'] += 1
       # Make sure G and D are in training mode, just in case they got set to eval
@@ -194,7 +197,8 @@ def run(config):
       x = utils.normalize(shift, scale)
 
       metrics = train(x, y)
-      train_log.log(itr=int(state_dict['itr']), **metrics)
+      end_time = time.time()
+      train_log.log(itr=int(state_dict['itr']), itr_time=(end_time-start_time), **metrics)
       
       # Every sv_log_interval, log singular values
       if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
