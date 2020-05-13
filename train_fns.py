@@ -129,7 +129,7 @@ def save_and_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y,
                                                   experiment_name,
                                                   state_dict['itr'])
   torchvision.utils.save_image(fixed_Gz.float().cpu(), image_filename,
-                             nrow=int(fixed_Gz.shape[0] **0.5), normalize=True)
+                             nrow=int(fixed_Gz.shape[0] **0.5), normalize=False)
   # For now, every time we save, also save sample sheets
   utils.sample_sheet(which_G,
                      classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']],
