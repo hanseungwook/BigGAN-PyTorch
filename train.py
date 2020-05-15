@@ -21,6 +21,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.nn import Parameter as P
 import torchvision
+import wandb
 
 # Import my stuff
 import inception_utils
@@ -38,6 +39,8 @@ def run(config):
   # configuration into the config-dict (e.g. inferring the number of classes
   # and size of the images from the dataset, passing in a pytorch object
   # for the activation specified as a string)
+  wandb.init(project='biggan_64')
+
   config['resolution'] = utils.imsize_dict[config['dataset']]
   config['n_classes'] = utils.nclass_dict[config['dataset']]
   config['G_activation'] = utils.activation_dict[config['G_nl']]
@@ -202,7 +205,9 @@ def run(config):
       metrics = train(x, y)
       end_time = time.time()
       train_log.log(itr=int(state_dict['itr']), itr_time=(end_time-start_time), **metrics)
-      
+      wandb.log({'itr_time': (end_time-start_time)}, commit=False)
+
+      start_rest_time = time.time()
       # Every sv_log_interval, log singular values
       if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
         train_log.log(itr=int(state_dict['itr']), 
@@ -233,6 +238,9 @@ def run(config):
                        get_inception_metrics, experiment_name, test_log)
     # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
+
+    end_rest_time = time.time()
+    wandb.log({'other_time': (end_rest_time-start_rest_time)}, commit=True)
 
 
 def main():
