@@ -147,7 +147,7 @@ def run(config):
   # Prepare a simple function get metrics that we use for trunc curves
   def get_metrics():
     sample = functools.partial(utils.sample, G=G, z_=z_, y_=y_, config=config)    
-    IS_mean, IS_std, FID = get_inception_metrics(sample, config['num_inception_images'], num_splits=10, prints=False)
+    IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt = get_inception_metrics(sample, config['num_inception_images'], num_splits=10, prints=False)
     # Prepare output string
     outstring = 'Using %s weights ' % ('ema' if config['use_ema'] else 'non-ema')
     outstring += 'in %s mode, ' % ('eval' if config['G_eval_mode'] else 'training')
@@ -158,6 +158,7 @@ def run(config):
     if config['accumulate_stats']:
       outstring += 'using %d standing stat accumulations, ' % config['num_standing_accumulations']
     outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID is %5.4f' % (state_dict['itr'], IS_mean, IS_std, FID)
+    outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score (IWT) is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID (IWT) is %5.4f' % (state_dict['itr'], IS_mean_iwt, IS_std_iwt, FID_iwt)
     print(outstring)
   if config['sample_inception_metrics']: 
     print('Calculating Inception metrics...')
