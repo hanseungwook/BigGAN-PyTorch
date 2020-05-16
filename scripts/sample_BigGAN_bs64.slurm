@@ -59,6 +59,7 @@ date
 # use --mybn --accumulate_stats --num_standing_accumulations 32 to 
 # use running stats
 python sample.py \
+--model BigGANdeep \
 --dataset WT64 --shuffle  --num_workers 8 --batch_size 128 \
 --base_root $HOME2/BigGAN-PyTorch/results_64_96/ \
 --num_G_accumulations 1 --num_D_accumulations 1 \
