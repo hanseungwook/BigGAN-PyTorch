@@ -63,6 +63,9 @@ def run(config):
   G = model.Generator(**config).cuda()
   utils.count_parameters(G)
   
+  # Loading norm dict
+  norm_dict = utils.load_norm_dict(config['norm_path'])
+  
   # Load weights
   print('Loading weights...')
   # Here is where we deal with the ema--load ema weights or load normal weights

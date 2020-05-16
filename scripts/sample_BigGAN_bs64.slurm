@@ -79,4 +79,4 @@ python sample.py \
 --G_batch_size 512 --sample_trunc_curves 0.05_0.05_1.0  \
 --sample_inception_metrics --sample_npz  --sample_random --sample_sheets --sample_interps \
 --sample_num_npz 20000 \
---load_weights copy1
+--load_weights copy1 --norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
