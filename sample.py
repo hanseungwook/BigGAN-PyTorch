@@ -65,7 +65,7 @@ def run(config):
   
   # Loading norm dict
   norm_dict = utils.load_norm_dict(config['norm_path'])
-  
+
   # Load weights
   print('Loading weights...')
   # Here is where we deal with the ema--load ema weights or load normal weights
@@ -101,7 +101,8 @@ def run(config):
     for i in trange(int(np.ceil(config['sample_num_npz'] / float(G_batch_size)))):
       with torch.no_grad():
         images, labels = sample()
-      x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
+      # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
+      x += [denormalize(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])]
       y += [labels.cpu().numpy()]
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
