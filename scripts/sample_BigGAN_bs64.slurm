@@ -77,4 +77,4 @@ python sample1.py \
 --ema --use_ema --ema_start 20000 --G_eval_mode \
 --test_every 2000 --save_every 500 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
---load_weights copy1
+--resume --load_weights copy1
