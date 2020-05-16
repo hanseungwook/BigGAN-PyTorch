@@ -61,8 +61,8 @@ date
 python sample1.py \
 --model BigGANdeep \
 --dataset WT64 --shuffle  --num_workers 8 --batch_size 64 \
---base_root /nobackup/users/swhan/BigGAN-PyTorch/results_64_96/ --data_root /data/ImageNet/ILSVRC2012/train/ \
---norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
+--base_root /nobackup/users/akashsri/BigGAN-PyTorch/results_64/ --data_root /data/ImageNet/ILSVRC2012/train/ \
+--norm_path /nobackup/users/akashsri/BigGAN-PyTorch/WT64_norm_values.npz \
 --num_G_accumulations 1 --num_D_accumulations 1 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
 --G_attn 64 --D_attn 64 \
@@ -77,4 +77,8 @@ python sample1.py \
 --ema --use_ema --ema_start 20000 --G_eval_mode \
 --test_every 2000 --save_every 500 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
---resume --load_weights copy1
+--resume --load_weights copy1 \
+--experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs128_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn64_Dattn64_Gshared_hier_ema
+
+echo "Run completed at:- "
+date
