@@ -78,7 +78,7 @@ python sample1.py \
 --test_every 2000 --save_every 500 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
 --resume --load_weights copy1 \
---experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs128_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn64_Dattn64_Gshared_hier_ema
+--experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs64_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn64_Dattn64_Gshared_hier_ema
 
 echo "Run completed at:- "
 date
