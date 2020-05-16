@@ -61,7 +61,7 @@ date
 python sample1.py \
 --model BigGANdeep \
 --dataset WT64 --shuffle  --num_workers 8 --batch_size 64 \
---base_root $HOME2/BigGAN-PyTorch/results_64/ --data_root /data/ImageNet/ILSVRC2012/train/ \
+--base_root $HOME2/BigGAN-PyTorch/results_64_96/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --norm_path $HOME2/BigGAN-PyTorch/WT64_norm_values.npz \
 --num_G_accumulations 1 --num_D_accumulations 1 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
