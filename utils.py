@@ -410,6 +410,7 @@ dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder,
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
+             'IN256': dset.ImageFolder, 'IN256': dset.ImageFolder,
              'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ILSVRC_HDF5,
              'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
@@ -417,17 +418,20 @@ imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
+               'IN256': 256, 'IN256': 256,
                'WT64': 64, 'WT64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
              'I128': 'ImageNet', 'I128_hdf5': 'ILSVRC128.hdf5',
              'I256': 'ImageNet', 'I256_hdf5': 'ILSVRC256.hdf5',
+             'IN256': '', 'IN256': '',
              'WT64': '', 'WT64_hdf5': '',
              'C10': 'cifar', 'C100': 'cifar'}
 nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
                'I128': 1000, 'I128_hdf5': 1000,
                'I256': 1000, 'I256_hdf5': 1000,
+               'IN256': 1000, 'IN256': 1000,
                'WT64': 1000, 'WT64_hdf5': 1000,
                'C10': 10, 'C100': 100}
 # Number of classes to put per sample sheet               
@@ -435,6 +439,7 @@ classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
+                          'IN256': 50, 'IN256': 50,
                           'WT64': 50, 'WT64_hdf5': 50,
                           'C10': 10, 'C100': 100}
 
@@ -681,7 +686,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
         train_transform = []
       else:
         train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(image_size*4), # 64*4 = 256
+                           transforms.Resize(image_size), # 256
                            transforms.ToTensor()]
         # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
     train_transform = transforms.Compose(train_transform)
@@ -1028,7 +1033,7 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
     image_filename = '%s/%s/%d/samples%d.jpg' % (samples_root, experiment_name, 
                                                  folder_number, i)
     torchvision.utils.save_image(out_ims, image_filename,
-                                 nrow=samples_per_class, normalize=False)
+                                 nrow=samples_per_class, normalize=True)
 
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)

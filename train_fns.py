@@ -91,53 +91,6 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
     return out
   return train
   
-def only_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y, 
-                    state_dict, config, experiment_name):    
-  # Use EMA G for samples or non-EMA?
-  which_G = G_ema if config['ema'] and config['use_ema'] else G
-  
-  # Accumulate standing statistics?
-  if config['accumulate_stats']:
-    utils.accumulate_standing_stats(G_ema if config['ema'] and config['use_ema'] else G,
-                           z_, y_, config['n_classes'],
-                           config['num_standing_accumulations'])
-  
-  # Save a random sample sheet with fixed z and y      
-  with torch.no_grad():
-    if config['parallel']:
-      fixed_Gz =  nn.parallel.data_parallel(which_G, (fixed_z, which_G.shared(fixed_y)))
-    else:
-      fixed_Gz = which_G(fixed_z, which_G.shared(fixed_y))
-  if not os.path.isdir('%s/%s' % (config['samples_root'], experiment_name)):
-    os.mkdir('%s/%s' % (config['samples_root'], experiment_name))
-  image_filename = '%s/%s/fixed_samples%d.jpg' % (config['samples_root'], 
-                                                  experiment_name,
-                                                  state_dict['itr'])
-  torchvision.utils.save_image(fixed_Gz.float().cpu(), image_filename,
-                             nrow=int(fixed_Gz.shape[0] **0.5), normalize=False)
-  # For now, every time we save, also save sample sheets
-  utils.sample_sheet(which_G,
-                     classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']],
-                     num_classes=config['n_classes'],
-                     samples_per_class=10, parallel=config['parallel'],
-                     samples_root=config['samples_root'],
-                     experiment_name=experiment_name,
-                     folder_number=state_dict['itr'],
-                     z_=z_)
-  # Also save interp sheets
-  for fix_z, fix_y in zip([False, False, True], [False, True, False]):
-    utils.interp_sheet(which_G,
-                       num_per_sheet=16,
-                       num_midpoints=8,
-                       num_classes=config['n_classes'],
-                       parallel=config['parallel'],
-                       samples_root=config['samples_root'],
-                       experiment_name=experiment_name,
-                       folder_number=state_dict['itr'],
-                       sheet_number=0,
-                       fix_z=fix_z, fix_y=fix_y, device='cuda')
-
-
 ''' This function takes in the model, saves the weights (multiple copies if 
     requested), and prepares sample sheets: one consisting of samples given
     a fixed noise seed (to show how the model evolves throughout training),
@@ -176,7 +129,7 @@ def save_and_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y,
                                                   experiment_name,
                                                   state_dict['itr'])
   torchvision.utils.save_image(fixed_Gz.float().cpu(), image_filename,
-                             nrow=int(fixed_Gz.shape[0] **0.5), normalize=False)
+                             nrow=int(fixed_Gz.shape[0] **0.5), normalize=True)
   # For now, every time we save, also save sample sheets
   utils.sample_sheet(which_G,
                      classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']],
@@ -212,33 +165,20 @@ def test(G, D, G_ema, z_, y_, state_dict, config, sample, get_inception_metrics,
     utils.accumulate_standing_stats(G_ema if config['ema'] and config['use_ema'] else G,
                            z_, y_, config['n_classes'],
                            config['num_standing_accumulations'])
-  IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt = get_inception_metrics(sample, 
-                                                                                 config['num_inception_images'],
-                                                                                 num_splits=10)
+  IS_mean, IS_std, FID = get_inception_metrics(sample, 
+                                               config['num_inception_images'],
+                                               num_splits=10)
   print('Itr %d: PYTORCH UNOFFICIAL Inception Score is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID is %5.4f' % (state_dict['itr'], IS_mean, IS_std, FID))
   # If improved over previous best metric, save approrpiate copy
   if ((config['which_best'] == 'IS' and IS_mean > state_dict['best_IS'])
     or (config['which_best'] == 'FID' and FID < state_dict['best_FID'])):
-    # print('%s improved over previous best, saving checkpoint...' % config['which_best'])
-    # utils.save_weights(G, D, state_dict, config['weights_root'],
-    #                    experiment_name, 'best%d' % state_dict['save_best_num'],
-    #                    G_ema if config['ema'] else None)
-    # state_dict['save_best_num'] = (state_dict['save_best_num'] + 1 ) % config['num_best_copies']
-    pass
-
-  if ((config['which_best'] == 'IS' and IS_mean_iwt > state_dict['best_IS_iwt'])
-    or (config['which_best'] == 'FID' and FID_iwt < state_dict['best_FID_iwt'])):
     print('%s improved over previous best, saving checkpoint...' % config['which_best'])
     utils.save_weights(G, D, state_dict, config['weights_root'],
                        experiment_name, 'best%d' % state_dict['save_best_num'],
                        G_ema if config['ema'] else None)
     state_dict['save_best_num'] = (state_dict['save_best_num'] + 1 ) % config['num_best_copies']
-
   state_dict['best_IS'] = max(state_dict['best_IS'], IS_mean)
   state_dict['best_FID'] = min(state_dict['best_FID'], FID)
-  state_dict['best_IS_iwt'] = max(state_dict['best_IS_iwt'], IS_mean_iwt)
-  state_dict['best_FID_iwt'] = min(state_dict['best_FID_iwt'], FID_iwt)
   # Log results to file
-  test_log.log(itr=int(state_dict['itr']), 
-               IS_mean=float(IS_mean), IS_std=float(IS_std), FID=float(FID),
-               IS_mean_iwt=float(IS_mean_iwt), IS_std_iwt=float(IS_std_iwt), FID_iwt=float(FID_iwt))
+  test_log.log(itr=int(state_dict['itr']), IS_mean=float(IS_mean),
+               IS_std=float(IS_std), FID=float(FID))
