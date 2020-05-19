@@ -140,7 +140,7 @@ def run(config):
     torchvision.utils.save_image(images.float(),
                                  '%s/%s/random_samples.jpg' % (config['samples_root'], experiment_name),
                                  nrow=int(G_batch_size**0.5),
-                                 normalize=True)
+                                 normalize=False)
 
   # Get Inception Score and FID
   get_inception_metrics = inception_utils.prepare_inception_metrics(config['dataset'], config['parallel'], config['no_fid'])
