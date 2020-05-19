@@ -142,40 +142,40 @@ def run(config):
                                  nrow=int(G_batch_size**0.5),
                                  normalize=False)
 
-  # Get Inception Score and FID
-  get_inception_metrics = inception_utils.prepare_inception_metrics(config['dataset'], config['parallel'], config['no_fid'])
-  # Prepare a simple function get metrics that we use for trunc curves
-  def get_metrics():
-    sample = functools.partial(utils.sample, G=G, z_=z_, y_=y_, config=config)    
-    IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt = get_inception_metrics(sample, config['num_inception_images'], num_splits=10, prints=False)
-    # Prepare output string
-    outstring = 'Using %s weights ' % ('ema' if config['use_ema'] else 'non-ema')
-    outstring += 'in %s mode, ' % ('eval' if config['G_eval_mode'] else 'training')
-    outstring += 'with noise variance %3.3f, ' % z_.var
-    outstring += 'over %d images, ' % config['num_inception_images']
-    if config['accumulate_stats'] or not config['G_eval_mode']:
-      outstring += 'with batch size %d, ' % G_batch_size
-    if config['accumulate_stats']:
-      outstring += 'using %d standing stat accumulations, ' % config['num_standing_accumulations']
-    outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID is %5.4f' % (state_dict['itr'], IS_mean, IS_std, FID)
-    outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score (IWT) is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID (IWT) is %5.4f' % (state_dict['itr'], IS_mean_iwt, IS_std_iwt, FID_iwt)
-    print(outstring)
-  if config['sample_inception_metrics']: 
-    print('Calculating Inception metrics...')
-    get_metrics()
+  # # Get Inception Score and FID
+  # get_inception_metrics = inception_utils.prepare_inception_metrics(config['dataset'], config['parallel'], config['no_fid'])
+  # # Prepare a simple function get metrics that we use for trunc curves
+  # def get_metrics():
+  #   sample = functools.partial(utils.sample, G=G, z_=z_, y_=y_, config=config)    
+  #   IS_mean, IS_std, FID, IS_mean_iwt, IS_std_iwt, FID_iwt = get_inception_metrics(sample, config['num_inception_images'], num_splits=10, prints=False)
+  #   # Prepare output string
+  #   outstring = 'Using %s weights ' % ('ema' if config['use_ema'] else 'non-ema')
+  #   outstring += 'in %s mode, ' % ('eval' if config['G_eval_mode'] else 'training')
+  #   outstring += 'with noise variance %3.3f, ' % z_.var
+  #   outstring += 'over %d images, ' % config['num_inception_images']
+  #   if config['accumulate_stats'] or not config['G_eval_mode']:
+  #     outstring += 'with batch size %d, ' % G_batch_size
+  #   if config['accumulate_stats']:
+  #     outstring += 'using %d standing stat accumulations, ' % config['num_standing_accumulations']
+  #   outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID is %5.4f' % (state_dict['itr'], IS_mean, IS_std, FID)
+  #   outstring += 'Itr %d: PYTORCH UNOFFICIAL Inception Score (IWT) is %3.3f +/- %3.3f, PYTORCH UNOFFICIAL FID (IWT) is %5.4f' % (state_dict['itr'], IS_mean_iwt, IS_std_iwt, FID_iwt)
+  #   print(outstring)
+  # if config['sample_inception_metrics']: 
+  #   print('Calculating Inception metrics...')
+  #   get_metrics()
     
-  # Sample truncation curve stuff. This is basically the same as the inception metrics code
-  if config['sample_trunc_curves']:
-    start, step, end = [float(item) for item in config['sample_trunc_curves'].split('_')]
-    print('Getting truncation values for variance in range (%3.3f:%3.3f:%3.3f)...' % (start, step, end))
-    for var in np.arange(start, end + step, step):     
-      z_.var = var
-      # Optionally comment this out if you want to run with standing stats
-      # accumulated at one z variance setting
-      if config['accumulate_stats']:
-        utils.accumulate_standing_stats(G, z_, y_, config['n_classes'],
-                                    config['num_standing_accumulations'])
-      get_metrics()
+  # # Sample truncation curve stuff. This is basically the same as the inception metrics code
+  # if config['sample_trunc_curves']:
+  #   start, step, end = [float(item) for item in config['sample_trunc_curves'].split('_')]
+  #   print('Getting truncation values for variance in range (%3.3f:%3.3f:%3.3f)...' % (start, step, end))
+  #   for var in np.arange(start, end + step, step):     
+  #     z_.var = var
+  #     # Optionally comment this out if you want to run with standing stats
+  #     # accumulated at one z variance setting
+  #     if config['accumulate_stats']:
+  #       utils.accumulate_standing_stats(G, z_, y_, config['n_classes'],
+  #                                   config['num_standing_accumulations'])
+  #     get_metrics()
 def main():
   # parse command line and run    
   parser = utils.prepare_parser()
