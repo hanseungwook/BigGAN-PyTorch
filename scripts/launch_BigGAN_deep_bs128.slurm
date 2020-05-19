@@ -65,7 +65,7 @@ date
 
 python train.py \
 --model BigGANdeep --parallel \
---dataset WT64 --shuffle  --num_workers 8 --batch_size 384 \
+--dataset IN256 --shuffle  --num_workers 8 --batch_size 384 \
 --base_root /nobackup/users/swhan/BigGAN-PyTorch/results_baseline/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --num_G_accumulations 1 --num_D_accumulations 1 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \

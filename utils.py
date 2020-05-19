@@ -656,12 +656,11 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
 
   # Append /FILENAME.hdf5 to root if using hdf5
   data_root += '/%s' % root_dict[dataset]
-  # data_root = 
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
-  # norm_mean = [0.5,0.5,0.5]
-  # norm_std = [0.5,0.5,0.5]
+  norm_mean = [0.5,0.5,0.5]
+  norm_std = [0.5,0.5,0.5]
   image_size = imsize_dict[dataset]
   # For image folder datasets, name of the file where we store the precomputed
   # image locations to avoid having to walk the dirs every time we load.
@@ -685,12 +684,11 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       if dataset in ['C10', 'C100']:
         train_transform = []
       else:
-        train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(image_size), # 256
-                           transforms.ToTensor()]
-        # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
-    train_transform = transforms.Compose(train_transform)
-    
+        train_transform = [CenterCropLongEdge(), transforms.Resize(image_size)]
+      # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
+    train_transform = transforms.Compose(train_transform + [
+                     transforms.ToTensor(),
+                     transforms.Normalize(norm_mean, norm_std)])
   train_set = which_dataset(root=data_root, transform=train_transform,
                             load_in_mem=load_in_mem, **dataset_kwargs)
 
