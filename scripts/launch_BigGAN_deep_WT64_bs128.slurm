@@ -65,8 +65,8 @@ date
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
 python train.py \
---model BigGANdeep \
---dataset WT64 --shuffle  --num_workers 8 --batch_size 128 \
+--model BigGANdeep --parallel \
+--dataset IN256 --shuffle  --num_workers 8 --batch_size 128 \
 --base_root /nobackup/users/swhan/BigGAN-PyTorch/results/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
 --num_G_accumulations 1 --num_D_accumulations 1 \
