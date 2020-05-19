@@ -18,9 +18,8 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --mem=0
+#SBATCH --mem=500g
 #SBATCH --time=24:00:00
-#SBATCH --exclusive
 #SBATCH -p sched_system_all 
 
 ## User python environment
@@ -65,9 +64,8 @@ date
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
 python calculate_inception_moments.py \
---dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
---norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
---parallel --shuffle
+--dataset IN256 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--shuffle
 
 echo "Run completed at:- "
 date
