@@ -100,7 +100,7 @@ def run(config):
     *[sum([p.data.nelement() for p in net.parameters()]) for net in [G,D]]))
   # Prepare state dict, which holds things like epoch # and itr #
   state_dict = {'itr': 0, 'epoch': 0, 'save_num': 0, 'save_best_num': 0,
-                'best_IS': 0, 'best_FID': 999999, 'best_IS_iwt': 0, 'best_FID_iwt': 999999,
+                'best_IS': 0, 'best_FID': 999999,
                 'config': config}
 
   # If loading from a pre-trained model, load weights
@@ -167,12 +167,6 @@ def run(config):
                                  else G),
                               z_=z_, y_=y_, config=config)
 
-  # WT filter
-  filters = utils.create_filters(device)
-
-  norm_dict = utils.load_norm_dict(config['norm_path'])
-  shift, scale = torch.from_numpy(norm_dict['shift']).to(device), torch.from_numpy(norm_dict['scale']).to(device)
-
   print('Beginning training at epoch %d...' % state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
   for epoch in range(state_dict['epoch'], config['num_epochs']):    
@@ -196,11 +190,6 @@ def run(config):
         x, y = x.to(device).half(), y.to(device)
       else:
         x, y = x.to(device), y.to(device)
-
-      # Get 64x64 WT patch and normalize
-      x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
-      x = utils.normalize(x, shift, scale)
-      torch.cuda.empty_cache()
       
       metrics = train(x, y)
       end_time = time.time()

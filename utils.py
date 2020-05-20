@@ -408,39 +408,54 @@ def add_sample_parser(parser):
     help='Calculate Inception metrics with sample.py? (default: %(default)s)')  
   return parser
 
+
 # Convenience dicts
 dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder, 
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
              'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ImageFolder,
-             'D128': dset.ImageFolder, 'D128_hdf5': dset.ImageFolder,
-             'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
+             'D64': dset.ImageFolder, 'D64_hdf5': dset.ImageFolder,
+             'C10': dset.CIFAR10, 'C100': dset.CIFAR100,
+             'I64ext': dset.ImageFolder, 'I64ext_hdf5': dset.ILSVRC_HDF5,
+             'I128ext': dset.ImageFolder, 'I128ext_hdf5': dset.ILSVRC_HDF5}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I64': 64, 'I64_hdf5': 64,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
-               'WT64': 64, 'WT64_hdf5': 64}
+               'I64ext': 64, 'I64ext_hdf5': 64,
+               'I128ext': 128, 'I128ext_hdf5': 128,
+               'WT64': 64, 'WT64_hdf5': 64,
+               'D64': 64, 'D64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
              'I128': 'ImageNet', 'I128_hdf5': 'ILSVRC128.hdf5',
              'I256': 'ImageNet', 'I256_hdf5': 'ILSVRC256.hdf5',
+             'C10': 'cifar', 'C100': 'cifar',
+             'I64ext': 'Ext', 'I64ext_hdf5': 'I64Ext.hdf5',
+             'I128ext': 'Ext', 'I128ext_hdf5': 'I128Ext.hdf5',
              'WT64': '', 'WT64_hdf5': '',
-             'C10': 'cifar', 'C100': 'cifar'}
+             'D64': '', 'D64_hdf5': '',}
 nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
                'I128': 1000, 'I128_hdf5': 1000,
                'I256': 1000, 'I256_hdf5': 1000,
                'WT64': 1000, 'WT64_hdf5': 1000,
-               'C10': 10, 'C100': 100}
+               'D64': 1000, 'D64_hdf5': 1000,
+               'C10': 10, 'C100': 100,
+               'I64ext': 20, 'I64ext_hdf5': 20,
+               'I128ext': 10, 'I128ext_hdf5': 10}
 # Number of classes to put per sample sheet               
 classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
-                          'WT64': 50, 'WT64_hdf5': 50,
-                          'C10': 10, 'C100': 100}
+                          'WT64': 1000, 'WT64_hdf5': 1000,
+                          'D64': 1000, 'D64_hdf5': 1000,
+                          'C10': 10, 'C100': 100,
+                          'I64ext': 20, 'I64ext_hdf5': 20,
+                          'I128ext': 20, 'I128ext_hdf5': 20}
 
 activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
@@ -655,12 +670,11 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
 
   # Append /FILENAME.hdf5 to root if using hdf5
   data_root += '/%s' % root_dict[dataset]
-  # data_root = 
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
-  # norm_mean = [0.5,0.5,0.5]
-  # norm_std = [0.5,0.5,0.5]
+  norm_mean = [0.5,0.5,0.5]
+  norm_std = [0.5,0.5,0.5]
   image_size = imsize_dict[dataset]
   # For image folder datasets, name of the file where we store the precomputed
   # image locations to avoid having to walk the dirs every time we load.
@@ -685,8 +699,9 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
         train_transform = []
       else:
         train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(image_size*4), # 64*4 = 256
-                           transforms.ToTensor()]
+                           transforms.Resize(image_size),
+                           transforms.ToTensor(),
+                           transforms.Normalize(mean=norm_mean, std=norm_std)]
         # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
     train_transform = transforms.Compose(train_transform)
     
