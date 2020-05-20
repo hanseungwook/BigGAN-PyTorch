@@ -14,10 +14,10 @@
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:3
-#SBATCH --gpus-per-node=3
+#SBATCH --gres=gpu:4
+#SBATCH --gpus-per-node=4
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=8
 #SBATCH --mem=500g
 #SBATCH --time=24:00:00
 #SBATCH -p sched_system_all 
@@ -66,8 +66,8 @@ date
 python train.py \
 --model BigGANdeep --parallel \
 --dataset IN256 --shuffle  --num_workers 8 --batch_size 384 \
---base_root /nobackup/users/swhan/BigGAN-PyTorch/results_baseline/ --data_root /data/ImageNet/ILSVRC2012/train/ \
---num_G_accumulations 1 --num_D_accumulations 1 \
+--base_root $HOME2/BigGAN-PyTorch/results_baseline/ --data_root /data/ImageNet/ILSVRC2012/train/ \
+--num_G_accumulations 6 --num_D_accumulations 6 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
 --G_attn 64 --D_attn 64 \
 --G_ch 128 --D_ch 128 \
@@ -79,7 +79,7 @@ python train.py \
 --G_init ortho --D_init ortho \
 --hier --dim_z 128 --shared_dim 128 \
 --ema --use_ema --ema_start 20000 --G_eval_mode \
---test_every 2000 --save_every 500 --num_best_copies 5 --num_save_copies 2 --seed 0 \
+--test_every 5000 --save_every 5000 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
 
 echo "Run completed at:- "
