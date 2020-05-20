@@ -39,7 +39,7 @@ def run(config):
   # configuration into the config-dict (e.g. inferring the number of classes
   # and size of the images from the dataset, passing in a pytorch object
   # for the activation specified as a string)
-  wandb.init(project='biggan_64')
+  wandb.init(project=config['wandb_project'])
 
   config['resolution'] = utils.imsize_dict[config['dataset']]
   config['n_classes'] = utils.nclass_dict[config['dataset']]
