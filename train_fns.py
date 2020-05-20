@@ -23,6 +23,7 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
     D.optim.zero_grad()
     # How many chunks to split x and y into?
     x = torch.split(x, config['batch_size'])
+    print('x shape', x.shape)
     y = torch.split(y, config['batch_size'])
     counter = 0
     
