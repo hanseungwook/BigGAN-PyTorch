@@ -187,9 +187,9 @@ def run(config):
       if config['ema']:
         G_ema.train()
       if config['D_fp16']:
-        x, y = x.to(device).half().contiguous(), y.to(device).contiguous()
+        x, y = x.contiguous().to(device).half(), y.contiguous().to(device)
       else:
-        x, y = x.to(device).contiguous(), y.to(device).contiguous()
+        x, y = x.contiguous().to(device), y.contiguous().to(device)
       
       metrics = train(x, y)
       end_time = time.time()
