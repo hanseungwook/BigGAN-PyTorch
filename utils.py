@@ -280,6 +280,9 @@ def prepare_parser():
   parser.add_argument(
     '--norm_path', type=str, default='./',
     help='Default location where norm values are stored (default: %(default)s)')
+  parser.add_argument(
+    '--wandb_project', type=str, default='biggan',
+    help='Default wandb project name (default: %(default)s)')
          
   ### EMA Stuff ###
   parser.add_argument(
