@@ -81,9 +81,9 @@ python train.py \
 --hier --dim_z 128 --shared_dim 128 \
 --ema --use_ema --ema_start 20000 --G_eval_mode \
 --test_every 5000 --save_every 5000 --num_best_copies 5 --num_save_copies 2 --seed 0 \
---use_multiepoch_sampler --num_epochs=100 \
+--use_multiepoch_sampler --num_epochs=100
 
-###--resume --load_weights copy1
+### --resume --load_weights copy1
 
 echo "Run completed at:- "
 date
