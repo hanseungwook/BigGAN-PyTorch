@@ -14,13 +14,12 @@
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --mem=0
+#SBATCH --ntasks-per-node=8
+#SBATCH --mem=500g
 #SBATCH --time=24:00:00
-#SBATCH --exclusive
 #SBATCH -p sched_system_all 
 
 ## User python environment
