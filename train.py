@@ -188,10 +188,10 @@ def run(config):
       D.train()
       if config['ema']:
         G_ema.train()
-      if config['D_fp16']:
-        x, y = x.to(device).half(), y.to(device)
-      else:
-        x, y = x.to(device), y.to(device)
+      # if config['D_fp16']:
+      #   x, y = x.to(device).half(), y.to(device)
+      # else:
+      #   x, y = x.to(device), y.to(device)
       
       ######## Refactored train code
       if (not d_acc_counter % config['num_D_accumulations']) and (not g_acc_counter % config['num_D_accumulations']):
