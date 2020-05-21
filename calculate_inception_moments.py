@@ -62,7 +62,7 @@ def run(config):
 
   for i, (x, y) in enumerate(tqdm(loaders[0])):
     ### TODO: CHANGE THIS TO PIXEL INTERPOLATION
-    x = F.interpolate(x, 64, mode='bilinear')
+    x = x.to(device)
 
     with torch.no_grad():
       pool_val, logits_val = net(x)

@@ -64,7 +64,7 @@ date
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
 python calculate_inception_moments.py \
---dataset D128 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--dataset D64 --data_root /data/ImageNet/ILSVRC2012/train/ \
 --parallel --shuffle
 
 echo "Run completed at:- "
