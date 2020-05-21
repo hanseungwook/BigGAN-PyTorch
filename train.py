@@ -135,8 +135,9 @@ def run(config):
   # to the dataloader, as G doesn't require dataloading.
   # Note that at every loader iteration we pass in enough data to complete
   # a full D iteration (regardless of number of D steps and accumulations)
-  D_batch_size = (config['batch_size'] * config['num_D_steps']
-                  * config['num_D_accumulations'])
+  # D_batch_size = (config['batch_size'] * config['num_D_steps']
+  #                 * config['num_D_accumulations'])
+  D_batch_size = config['batch_size']
   loaders = utils.get_data_loaders(**{**config, 'batch_size': D_batch_size,
                                       'start_itr': state_dict['itr']})
 
@@ -173,6 +174,9 @@ def run(config):
   norm_dict = utils.load_norm_dict(config['norm_path'])
   shift, scale = torch.from_numpy(norm_dict['shift']).to(device), torch.from_numpy(norm_dict['scale']).to(device)
 
+  d_acc_counter = 0
+  g_acc_counter = 0
+
   print('Beginning training at epoch %d...' % state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
   for epoch in range(state_dict['epoch'], config['num_epochs']):    
@@ -184,8 +188,6 @@ def run(config):
     for i, (x, y) in enumerate(pbar):
       start_time = time.time()
       
-      # Increment the iteration counter
-      state_dict['itr'] += 1
       # Make sure G and D are in training mode, just in case they got set to eval
       # For D, which typically doesn't have BN, this shouldn't matter much.
       G.train()
@@ -202,10 +204,78 @@ def run(config):
       x = utils.normalize(x, shift, scale)
       torch.cuda.empty_cache()
       
-      metrics = train(x, y)
+      ######## Refactored train code
+      if not (d_acc_counter % config['num_D_accumulations']) and (g_acc_counter % config['num_D_accumulations']):
+        G.optim.zero_grad()
+        D.optim.zero_grad()
+      
+      # Optionally toggle D and G's "require_grad"
+      if config['toggle_grads']:
+        utils.toggle_grad(D, True)
+        utils.toggle_grad(G, False)
+        
+      # Discriminator accumulate gradients
+      z_.sample_()
+      y_.sample_()
+      D_fake, D_real = GD(z_[:config['batch_size']], y_[:config['batch_size']], 
+                          x[counter], y[counter], train_G=False, 
+                          split_D=config['split_D'])
+      
+      # Compute components of D's loss, average them, and divide by 
+      # the number of gradient accumulations
+      D_loss_real, D_loss_fake = losses.discriminator_loss(D_fake, D_real)
+      D_loss = (D_loss_real + D_loss_fake) / float(config['num_D_accumulations'])
+      D_loss.backward()
+      d_acc_counter += 1      
+          
+      # Optionally apply ortho reg in D
+      if config['D_ortho'] > 0.0:
+        # Debug print to indicate we're using ortho reg in D.
+        print('using modified ortho reg in D')
+        utils.ortho(D, config['D_ortho'])
+      
+      if not d_acc_counter % config['num_D_accumulations']:
+        D.optim.step()
+        d_acc_counter = 0
+      
+      # Optionally toggle "requires_grad"
+      if config['toggle_grads']:
+        utils.toggle_grad(D, False)
+        utils.toggle_grad(G, True)
+      
+      # Generator accumulate gradients
+      z_.sample_()
+      y_.sample_()
+      D_fake = GD(z_, y_, train_G=True, split_D=config['split_D'])
+      G_loss = losses.generator_loss(D_fake) / float(config['num_G_accumulations'])
+      G_loss.backward()
+      g_acc_counter += 1
+      
+      # Optionally apply modified ortho reg in G
+      if config['G_ortho'] > 0.0:
+        print('using modified ortho reg in G') # Debug print to indicate we're using ortho reg in G
+        # Don't ortho reg shared, it makes no sense. Really we should blacklist any embeddings for this
+        utils.ortho(G, config['G_ortho'], 
+                    blacklist=[param for param in G.shared.parameters()])
+      
+      if not g_acc_counter % config['num_G_accumulations']:
+        G.optim.step()
+        g_acc_counter = 0
+        # Increment the iteration counter
+        state_dict['itr'] += 1
+      
+      # If we have an ema, update it, regardless of if we test with it or not
+      if config['ema']:
+        ema.update(state_dict['itr'])
+      
+      metrics = {'G_loss': float(G_loss.item()), 
+              'D_loss_real': float(D_loss_real.item()),
+              'D_loss_fake': float(D_loss_fake.item())}
+
+      # metrics = train(x, y)
       end_time = time.time()
       train_log.log(itr=int(state_dict['itr']), itr_time=(end_time-start_time), **metrics)
-      wandb.log({'itr_time': (end_time-start_time)}, commit=False)
+      wandb.log({'sub_itr_time': (end_time-start_time)}, commit=False)
 
       start_rest_time = time.time()
       # Every sv_log_interval, log singular values
@@ -220,7 +290,7 @@ def run(config):
                            for key in metrics]), end=' ')
 
       # Save weights and copies as configured at specified interval
-      if not (state_dict['itr'] % config['save_every']):
+      if not (state_dict['itr'] % config['save_every'] and d_acc_counter % config['num_D_accumulations']):
         if config['G_eval_mode']:
           print('Switchin G to eval mode...')
           G.eval()
@@ -230,17 +300,18 @@ def run(config):
                                   state_dict, config, experiment_name)
 
       # Test every specified interval
-      if not (state_dict['itr'] % config['test_every']):
+      if not (state_dict['itr'] % config['test_every'] and d_acc_counter % config['num_D_accumulations']):
         if config['G_eval_mode']:
           print('Switchin G to eval mode...')
           G.eval()
         train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
                        get_inception_metrics, experiment_name, test_log)
+      
+      end_rest_time = time.time()
+      wandb.log({'sub_other_time': (end_rest_time-start_rest_time)}, commit=True)
+      
     # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
-
-    end_rest_time = time.time()
-    wandb.log({'other_time': (end_rest_time-start_rest_time)}, commit=True)
 
 
 def main():
