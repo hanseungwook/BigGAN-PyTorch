@@ -198,11 +198,6 @@ def run(config):
         x, y = x.to(device).half(), y.to(device)
       else:
         x, y = x.to(device), y.to(device)
-
-      # Get 64x64 WT patch and normalize
-      x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
-      x = utils.normalize(x, shift, scale)
-      torch.cuda.empty_cache()
       
       ######## Refactored train code
       if not (d_acc_counter % config['num_D_accumulations']) and (g_acc_counter % config['num_D_accumulations']):
