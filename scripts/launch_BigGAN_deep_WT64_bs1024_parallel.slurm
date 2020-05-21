@@ -65,7 +65,7 @@ date
 
 python train.py \
 --model BigGANdeep \
---dataset WT64 --parallel --shuffle  --num_workers 8 --batch_size 512 \
+--dataset WT64 --parallel --shuffle  --num_workers 8 --batch_size 1024 \
 --base_root $HOME2/BigGAN-PyTorch/results_deep_parallel/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
 --num_G_accumulations 1 --num_D_accumulations 1 \
