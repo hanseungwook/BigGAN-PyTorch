@@ -59,8 +59,8 @@ def run(config):
 
 
   with h5.File(config['output_dir'] + '/ILSVRC_WT64.hdf5', 'w') as f:
-      x_ds = f.create_dataset('x', shape=(len(train_dataset), 3, 64, 64), dtype=np.float32, fillvalue=0)
-      y_ds = f.create_dataset('y', shape=(len(train_dataset), ), dtype=np.int64)
+      x_ds = f.create_dataset('imgs', shape=(len(train_dataset), 3, 64, 64), dtype=np.float32, fillvalue=0)
+      y_ds = f.create_dataset('labels', shape=(len(train_dataset), ), dtype=np.int64)
 
       for i, (x, y) in enumerate(tqdm(train_loader)):
           x = x.to(device)
