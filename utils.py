@@ -415,7 +415,7 @@ dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
              'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ImageFolder,
-             'D64': dset.ImageFolder, 'D64_hdf5': dset.ImageFolder,
+             'D64': dset.ImageFolder, 'D64_hdf5': dset.ILSVRC_HDF5,
              'C10': dset.CIFAR10, 'C100': dset.CIFAR100,
              'I64ext': dset.ImageFolder, 'I64ext_hdf5': dset.ILSVRC_HDF5,
              'I128ext': dset.ImageFolder, 'I128ext_hdf5': dset.ILSVRC_HDF5}
