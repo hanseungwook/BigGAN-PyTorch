@@ -61,7 +61,6 @@ def run(config):
   device = 'cuda'
 
   for i, (x, y) in enumerate(tqdm(loaders[0])):
-    ### TODO: CHANGE THIS TO PIXEL INTERPOLATION
     x = x.to(device)
 
     with torch.no_grad():
