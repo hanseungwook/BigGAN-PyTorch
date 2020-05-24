@@ -50,10 +50,10 @@ def run(config):
   norm_std = [0.5,0.5,0.5]
 
   # Create transforms
-  train_transform = [utils.CenterCropLongEdge(), 
+  train_transform = transforms.Compose([utils.CenterCropLongEdge(), 
                      transforms.Resize(config['image_size']),
                      transforms.ToTensor(),
-                     transforms.Normalize(mean=norm_mean, std=norm_std)]
+                     transforms.Normalize(mean=norm_mean, std=norm_std)])
 
   train_dataset = ImageFolder(root=config['data_root'], transform=train_transform)
   train_loader = DataLoader(train_dataset,
