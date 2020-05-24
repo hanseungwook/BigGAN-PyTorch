@@ -84,8 +84,7 @@ python train.py \
 --use_multiepoch_sampler --num_epochs=100 \
 --wandb_project biggan_deep_bs512_hdf5 \
 --experiment_name biggan_deep_wt64_hdf5
-
-### --resume --load_weights copy1
+--resume --load_weights copy0
 
 echo "Run completed at:- "
 date
