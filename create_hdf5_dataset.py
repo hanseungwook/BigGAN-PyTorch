@@ -67,10 +67,8 @@ def run(config):
       y_ds = f.create_dataset('labels', shape=(len(train_dataset), ), dtype=np.int64)
 
       for i, (x, y) in enumerate(tqdm(train_loader)):
-          x = x.to(device)
-
-          x_ds[i*batch_size:(i+1)*batch_size] = x.cpu().numpy()
-          y_ds[i*batch_size:(i+1)*batch_size] = y.cpu().numpy()
+          x_ds[i*batch_size:(i+1)*batch_size] = x.numpy()
+          y_ds[i*batch_size:(i+1)*batch_size] = y.numpy()
 
 
 def main():
