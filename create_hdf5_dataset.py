@@ -64,7 +64,7 @@ def run(config):
 
       for i, (x, y) in enumerate(tqdm(train_loader)):
           x = x.to(device)
-          x = utils.wt(x, filters, levels=3)[:, :, :64, :64]
+          x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
 
           x_ds[i*batch_size:(i+1)*batch_size] = x.cpu().numpy()
           y_ds[i*batch_size:(i+1)*batch_size] = y.cpu().numpy()
