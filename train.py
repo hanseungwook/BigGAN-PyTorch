@@ -236,11 +236,14 @@ def run(config):
           G.eval()
         train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
                        get_inception_metrics, experiment_name, test_log)
+
+      end_rest_time = time.time()
+      wandb.log({'other_time': (end_rest_time-start_rest_time)}, commit=True)
+      
     # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
 
-    end_rest_time = time.time()
-    wandb.log({'other_time': (end_rest_time-start_rest_time)}, commit=True)
+
 
 
 def main():
