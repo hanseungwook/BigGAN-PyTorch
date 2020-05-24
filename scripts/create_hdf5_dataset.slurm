@@ -65,7 +65,7 @@ date
 
 python create_hdf5_dataset.py \
 --data_root /data/ImageNet/ILSVRC2012/train/ --output_dir $HOME2/BigGAN-PyTorch/data/ \
---image_size 64 --batch_size 256 --num_workers=8 
+--image_size 256 --batch_size 256 --num_workers=8 
 
 echo "Run completed at:- "
 date
