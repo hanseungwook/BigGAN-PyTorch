@@ -5,17 +5,17 @@
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err
 
-#SBATCH -J biggan_baseline
-#SBATCH -o biggan_baseline_%j.out
-#SBATCH -e biggan_baseline_%j.err
+#SBATCH -J make_hdf5
+#SBATCH -o make_hdf5_%j.out
+#SBATCH -e make_hdf5_%j.err
 
 #SBATCH --mail-user=seungwook.han@ibm.com
 #SBATCH --mail-type=ALL
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:4
-#SBATCH --gpus-per-node=4
+#SBATCH --gres=gpu:1
+#SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=500g
@@ -63,25 +63,9 @@ date
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
-python train.py \
---model BigGANdeep --parallel \
---dataset IN256_hdf5 --shuffle  --num_workers 8 --batch_size 64 --load_in_mem \
---base_root $HOME2/BigGAN-PyTorch/results_baseline/ --data_root /data/ImageNet/ILSVRC2012/train/ \
---num_G_accumulations 32 --num_D_accumulations 32 \
---num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
---G_attn 64 --D_attn 64 \
---G_ch 128 --D_ch 128 \
---G_depth 2 --D_depth 2 \
---G_nl inplace_relu --D_nl inplace_relu \
---SN_eps 1e-6 --BN_eps 1e-5 --adam_eps 1e-6 \
---G_ortho 0.0 \
---G_shared \
---G_init ortho --D_init ortho \
---hier --dim_z 128 --shared_dim 128 \
---ema --use_ema --ema_start 20000 --G_eval_mode \
---test_every 2000 --save_every 2000 --num_best_copies 5 --num_save_copies 2 --seed 0 \
---use_multiepoch_sampler --num_epochs=100 \
---wandb_project biggan_deep_baseline_bs512x4_hdf5
+python create_hdf5_dataset.py \
+--data_root /data/ImageNet/ILSVRC2012/train/ --output_dir $HOME2/BigGAN-PyTorch/data/ \
+--image_size 64 --batch_size 256 --num_workers=8 
 
 echo "Run completed at:- "
 date

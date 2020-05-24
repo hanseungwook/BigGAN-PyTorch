@@ -413,7 +413,7 @@ dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder,
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
-             'IN256': dset.ImageFolder, 'IN256': dset.ImageFolder,
+             'IN256': dset.ImageFolder, 'IN256_hdf5': dset.ILSVRC_HDF5,
              'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ILSVRC_HDF5,
              'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
@@ -421,7 +421,7 @@ imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
-               'IN256': 256, 'IN256': 256,
+               'IN256': 256, 'IN256_hdf5': 256,
                'WT64': 64, 'WT64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
@@ -434,15 +434,16 @@ nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
                'I128': 1000, 'I128_hdf5': 1000,
                'I256': 1000, 'I256_hdf5': 1000,
-               'IN256': 1000, 'IN256': 1000,
+               'IN256': 1000, 'IN256_hdf5': 1000,
                'WT64': 1000, 'WT64_hdf5': 1000,
                'C10': 10, 'C100': 100}
+               
 # Number of classes to put per sample sheet               
 classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
-                          'IN256': 50, 'IN256': 50,
+                          'IN256': 50, 'IN256_hdf5': 50,
                           'WT64': 50, 'WT64_hdf5': 50,
                           'C10': 10, 'C100': 100}
 
@@ -658,7 +659,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
                      **kwargs):
 
   # Append /FILENAME.hdf5 to root if using hdf5
-  data_root += '/%s' % root_dict[dataset]
+  # data_root += '/%s' % root_dict[dataset]
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
