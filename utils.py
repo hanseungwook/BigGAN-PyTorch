@@ -654,7 +654,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
                      **kwargs):
 
   # Append /FILENAME.hdf5 to root if using hdf5
-  data_root += '/%s' % root_dict[dataset]
+  # data_root += '/%s' % root_dict[dataset]
   # data_root = 
   print('Using dataset root location %s' % data_root)
 
