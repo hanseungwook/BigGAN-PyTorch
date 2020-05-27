@@ -521,7 +521,10 @@ def iwt(vres, inv_filters, levels=1):
   res = res[:,:,2:-2,2:-2] #removing padding
 
   return res.reshape(bs, -1, h, w)
-  
+
+def denormalize_pixel(x):
+  return (x * 0.5) + 0.5
+
 def denormalize(x, shift, scale):
   return ((x * 0.5) + 0.5) * scale - shift
     
