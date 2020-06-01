@@ -1100,13 +1100,13 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
                                        ims[0].shape[3]).data.float().cpu()
     # The path for the samples
-    image_filename = '%s/%s/%d/samples%d.jpg' % (samples_root, experiment_name, 
-                                                 folder_number, i)
+    image_filename = '%s/%s/cond/samples%d.jpg' % (samples_root, experiment_name, i)
     torchvision.utils.save_image(out_ims, image_filename,
                                  nrow=samples_per_class, normalize=True)
 
   out_ims_total = torch.stack(ims_total, 1).view(-1, ims_total[0].shape[1], ims_total[0].shape[2], 
                                     ims_total[0].shape[3]).data.float().cpu().numpy()
+  print(out_ims_total.shape)
   y_total = np.concatenate(y_total, 0)
   print('Saving npz to %s...' % 'class_samples.npz')
   np.savez('class_samples.npz', **{'x' : out_ims_total, 'y' : y_total})
