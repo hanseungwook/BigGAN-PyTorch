@@ -26,6 +26,7 @@ from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from tqdm import trange
 
 import datasets as dset
 
@@ -1078,7 +1079,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
   # loop over total number of sheets
   ims_total = []
   y_total = []
-  for i in range(num_classes // classes_per_sheet):
+  for i in trange(num_classes // classes_per_sheet):
     ims = []
     y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
     for j in range(samples_per_class):
