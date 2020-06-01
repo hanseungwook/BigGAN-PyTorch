@@ -1103,14 +1103,8 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
     image_filename = '%s/%s/cond/samples%d.jpg' % (samples_root, experiment_name, i)
     torchvision.utils.save_image(out_ims, image_filename,
                                  nrow=samples_per_class, normalize=True)
-
-  out_ims_total = torch.stack(ims_total, 1).view(-1, ims_total[0].shape[1], ims_total[0].shape[2], 
-                                    ims_total[0].shape[3]).data.float().cpu().numpy()
-  print(out_ims_total.shape)
-  y_total = np.concatenate(y_total, 0)
-  print('Saving npz to %s...' % 'class_samples.npz')
-  np.savez('class_samples.npz', **{'x' : out_ims_total, 'y' : y_total})
-  
+    print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
+    np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : np.concatenate(y.cpu().numpy(), 0)})
 
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
