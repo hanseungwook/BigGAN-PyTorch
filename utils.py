@@ -1070,7 +1070,7 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
 
 # Sample function for sample sheets
 def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
-                 samples_root, experiment_name, folder_number, z_=None):
+                 samples_root, experiment_name, folder_number, z_=None, norm_dict=None):
   # Prepare sample directory
   if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
     os.mkdir('%s/%s' % (samples_root, experiment_name))
@@ -1094,7 +1094,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
           o = G(z_[:classes_per_sheet], G.shared(y))
 
       ims += [o.data.cpu()]
-      ims_total += [o.data.cpu()]
+      ims_total += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
       y_total += [y.cpu()]
     # This line should properly unroll the images
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 

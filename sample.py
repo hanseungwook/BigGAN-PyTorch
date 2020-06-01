@@ -132,7 +132,8 @@ def run(config):
                          samples_root=config['samples_root'], 
                          experiment_name=experiment_name,
                          folder_number=config['sample_sheet_folder_num'],
-                         z_=z_,)
+                         z_=z_,
+                         norm_dict=norm_dict)
 
   # Sample interp sheets
   if config['sample_interps']:
