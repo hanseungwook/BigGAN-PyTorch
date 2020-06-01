@@ -1095,7 +1095,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
 
       ims += [o.data.cpu()]
       ims_total += [o.data.cpu()]
-      y_total += [y]
+      y_total += [y.cpu()]
     # This line should properly unroll the images
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
                                        ims[0].shape[3]).data.float().cpu()
