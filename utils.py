@@ -1109,7 +1109,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
                                     ims_total[0].shape[3]).data.float().cpu().numpy()
   y_total = np.concatenate(y_total, 0)
   print('Saving npz to %s...' % 'class_samples.npz')
-  np.savez('class_samples.npz', **{'x' : out_ims_total, 'y' : y})
+  np.savez('class_samples.npz', **{'x' : out_ims_total, 'y' : y_total})
   
 
 
