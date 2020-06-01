@@ -1093,9 +1093,8 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
         else:
           o = G(z_[:classes_per_sheet], G.shared(y))
 
-      ims += [o.data.cpu()]
-      ims_total += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
-      y_total += [y.cpu()]
+      ims += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
+      
     # This line should properly unroll the images
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
                                        ims[0].shape[3]).data.float().cpu()
@@ -1104,7 +1103,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
     torchvision.utils.save_image(out_ims, image_filename,
                                  nrow=samples_per_class, normalize=True)
     print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
-    np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : np.concatenate(y.cpu().numpy(), 0)})
+    np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : y.cpu()})
 
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
