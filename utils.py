@@ -1075,7 +1075,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
   if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
     os.mkdir('%s/%s' % (samples_root, experiment_name))
   if not os.path.isdir('%s/%s/%d_cond' % (samples_root, experiment_name, folder_number)):
-    os.mkdir('%s/%s/%d' % (samples_root, experiment_name, folder_number))
+    os.mkdir('%s/%s/%d_cond' % (samples_root, experiment_name, folder_number))
   # loop over total number of sheets
   ims_total = []
   y_total = []
