@@ -700,7 +700,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       print('Data will not be augmented...')
       if dataset in ['C10', 'C100']:
         train_transform = []
-      elif dataset in ['D64']:
+      elif dataset in ['D64', 'IN256']:
         train_transform = [CenterCropLongEdge(), 
                            transforms.Resize(image_size),
                            transforms.ToTensor(),
