@@ -508,10 +508,10 @@ def iwt(vres, inv_filters, levels=1):
 
   return res.reshape(bs, -1, h, w)
   
-def denormalize(x, shift, scale):
+def denormalize_wt(x, shift, scale):
   return ((x * 0.5) + 0.5) * scale - shift
     
-def normalize(x, shift, scale):
+def normalize_wt(x, shift, scale):
   return (((x + shift) / scale) - 0.5) / 0.5
   
 def load_norm_dict(path):

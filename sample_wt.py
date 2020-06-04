@@ -102,7 +102,7 @@ def run(config):
       with torch.no_grad():
         images, labels = sample()
       # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-      x += [utils.denormalize(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])]
+      x += [utils.denormalize_wt(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])]
       y += [labels.cpu().numpy()]
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    

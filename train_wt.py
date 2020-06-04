@@ -198,7 +198,7 @@ def run(config):
         x, y = x.to(device), y.to(device)
 
       # HDF5 -- x is already a WT'ed 64x64 patch
-      x = utils.normalize(x, shift, scale)
+      x = utils.normalize_wt(x, shift, scale)
       torch.cuda.empty_cache()
       
       metrics = train(x, y)
