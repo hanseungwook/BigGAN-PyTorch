@@ -197,8 +197,7 @@ def run(config):
       else:
         x, y = x.to(device), y.to(device)
 
-      # Get 64x64 WT patch and normalize
-      x = utils.wt(x, filters, levels=2)[:, :, :64, :64]
+      # HDF5 -- x is already a WT'ed 64x64 patch
       x = utils.normalize(x, shift, scale)
       torch.cuda.empty_cache()
       
@@ -239,7 +238,7 @@ def run(config):
 
       end_rest_time = time.time()
       wandb.log({'other_time': (end_rest_time-start_rest_time)}, commit=True)
-      
+
     # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
 

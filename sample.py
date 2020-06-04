@@ -107,20 +107,34 @@ def run(config):
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
-    npz_filename = '%s/%s/samples.npz' % (config['samples_root'], experiment_name)
+    npz_filename = '{}/{}/samples_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
+    # npz_filename = '%s/%s/samples_z%.npz' % (config['samples_root'], experiment_name, str(config['z_var']))
     print('Saving npz to %s...' % npz_filename)
     np.savez(npz_filename, **{'x' : x, 'y' : y})
   
   # Prepare sample sheets
+  # if config['sample_sheets']:
+  #   print('Preparing conditional sample sheets...')
+  #   utils.sample_sheet(G, classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
+  #                        num_classes=config['n_classes'], 
+  #                        samples_per_class=10, parallel=config['parallel'],
+  #                        samples_root=config['samples_root'], 
+  #                        experiment_name=experiment_name,
+  #                        folder_number=config['sample_sheet_folder_num'],
+  #                        z_=z_,)
+
+  # Prepare sample sheets and save samples into npz
   if config['sample_sheets']:
     print('Preparing conditional sample sheets...')
-    utils.sample_sheet(G, classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
+    utils.save_sample_sheet(G, classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
                          num_classes=config['n_classes'], 
                          samples_per_class=10, parallel=config['parallel'],
                          samples_root=config['samples_root'], 
                          experiment_name=experiment_name,
                          folder_number=config['sample_sheet_folder_num'],
-                         z_=z_,)
+                         z_=z_,
+                         norm_dict=norm_dict)
+
   # Sample interp sheets
   if config['sample_interps']:
     print('Preparing interp sheets...')

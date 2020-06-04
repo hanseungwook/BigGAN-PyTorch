@@ -66,8 +66,8 @@ date
 python train.py \
 --model BigGANdeep \
 --dataset WT64_hdf5 --shuffle --parallel --num_workers 8 --batch_size 256 --load_in_mem \
---base_root $HOME2/BigGAN-PyTorch/results_deep_hdf5/ --data_root $HOME2/BigGAN-PyTorch/data/ILSVRC_WT64.hdf5 \
---norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
+--base_root $HOME2/BigGAN-PyTorch/results_deep_hdf5/ --data_root $HOME2/BigGAN-PyTorch1/data/ILSVRC_WT64.hdf5 \
+--norm_path /nobackup/users/swhan/BigGAN-PyTorch1/WT64_norm_values.npz \
 --num_G_accumulations 2 --num_D_accumulations 2 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
 --G_attn 32 --D_attn 32 \
@@ -83,9 +83,8 @@ python train.py \
 --test_every 2000 --save_every 2000 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
 --wandb_project biggan_deep_bs512_hdf5 \
---experiment_name biggan_deep_wt64_hdf5
-
-### --resume --load_weights copy1
+--experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs256_nDa2_nGa2_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
+--resume --load_weights copy0
 
 echo "Run completed at:- "
 date
