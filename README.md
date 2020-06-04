@@ -4,9 +4,9 @@ The author's officially unofficial PyTorch BigGAN implementation.
 ![Dogball? Dogball!](imgs/header_image.jpg?raw=true "Dogball? Dogball!")
 
 
-This repo contains code for 4-8 GPU training of BigGANs from [Large Scale GAN Training for High Fidelity Natural Image Synthesis](https://arxiv.org/abs/1809.11096) by Andrew Brock, Jeff Donahue, and Karen Simonyan.
+This repo contains code for 1-8 GPU training of BigGANs (in particular, not-so-biggan sampler), adapted from [Large Scale GAN Training for High Fidelity Natural Image Synthesis](https://arxiv.org/abs/1809.11096) by Andrew Brock, Jeff Donahue, and Karen Simonyan.
 
-This code is by Andy Brock and Alex Andonian.
+This code is written by Andy Brock and Alex Andonian, and modified by Seungwook Han.
 
 ## How To Use This Code
 You will need:
@@ -17,20 +17,36 @@ You will need:
 
 First, you may optionally prepare a pre-processed HDF5 version of your target dataset for faster I/O. Following this (or not), you'll need the Inception moments needed to calculate FID. These can both be done by modifying and running
 
-```sh
-sh scripts/utils/prepare_data.sh
+```bash
+sbatch scripts/create_hdf5_dataset_{type of model}.slurm
+sbatch scripts/calculate_inception_moments_{type of model}.slurm
 ```
 
-Which by default assumes your ImageNet training set is downloaded into the root folder `data` in this directory, and will prepare the cached HDF5 at 128x128 pixel resolution.
+In the above, the types of models that we can train are the following: `wt`, `pixel`, and `baseline`. If your machine/server does not use slurm, then you can easily run the script by copy and pasting the actual script command inside. Also, within the scripts, it defines the data directory, and that needs to be updated accordingly.
 
-In the scripts folder, there are multiple bash scripts which will train BigGANs with different batch sizes. This code assumes you do not have access to a full TPU pod, and accordingly
-spoofs mega-batches by using gradient accumulation (averaging grads over multiple minibatches, and only taking an optimizer step after N accumulations). By default, the `launch_BigGAN_bs256x8.sh` script trains a
-full-sized BigGAN model with a batch size of 256 and 8 gradient accumulations, for a total batch size of 2048. On 8xV100 with full-precision training (no Tensor cores), this script takes 15 days to train to 150k iterations.
+In the scripts folder, there are multiple bash scripts which will train BigGANs of different model types (`wt`, `pixel`, and `baseline`). This code assumes you do not have access to a full TPU pod, and accordingly
+spoofs mega-batches by using gradient accumulation (averaging grads over multiple minibatches, and only taking an optimizer step after N accumulations). In the original code by Andrew Brock et al, it incorrectly loads all the data for `batch size * N accumulations`, which defeats the purpose of gradient accumulations which are supposed to allow you to spoof a large batch-size by loading only a mini-batch at once and accumulating up to the number that you want. Therefore, a fix has been made for the baseline implementation only, such that these gradient accumulations do not load everything, but only the current mini-batch for gradient accumulation. 
 
-You will first need to figure out the maximum batch size your setup can support. The pre-trained models provided here were trained on 8xV100 (16GB VRAM each) which can support slightly more than the BS256 used by default.
-Once you've determined this, you should modify the script so that the batch size times the number of gradient accumulations is equal to your desired total batch size (BigGAN defaults to 2048).
+You can run the training of the three models with the following commands:
 
-Note also that this script uses the `--load_in_mem` arg, which loads the entire (~64GB) I128.hdf5 file into RAM for faster data loading. If you don't have enough RAM to support this (probably 96GB+), remove this argument.
+not-so-biggan wt sampler:
+```bash
+sbatch scripts/launch_BigGAN_deep_WT64_bs512_hdf5.slurm
+```
+
+not-so-biggan pixel sampler:
+```bash
+sbatch scripts/launch_BigGAN_deep_D64_bs512_hdf5.slurm
+```
+
+not-so-biggan pixel sampler:
+```bash
+sbatch scripts/launch_BigGAN_deep_baseline_bs64x32.slurm
+```
+
+
+
+Note also that this script uses the `--load_in_mem` arg, which loads the entire (~64GB) I128.hdf5 file into RAM for faster data loading. If you don't have enough RAM to support this (probably 96GB+), remove this argument. 
 
 
 ## Metrics and Sampling
@@ -39,12 +55,14 @@ Note also that this script uses the `--load_in_mem` arg, which loads the entire 
 During training, this script will output logs with training metrics and test metrics, will save multiple copies (2 most recent and 5 highest-scoring) of the model weights/optimizer params, and will produce samples and interpolations every time it saves weights.
 The logs folder contains scripts to process these logs and plot the results using MATLAB (sorry not sorry).
 
-After training, one can use `sample.py` to produce additional samples and interpolations, test with different truncation values, batch sizes, number of standing stat accumulations, etc. See the `sample_BigGAN_bs256x8.sh` script for an example.
+After training, one can use `sample.py` to produce additional samples and interpolations, test with different truncation values, batch sizes, number of standing stat accumulations, etc. You can run the following scripts to run sampling:
 
-By default, everything is saved to weights/samples/logs/data folders which are assumed to be in the same folder as this repo.
-You can point all of these to a different base folder using the `--base_root` argument, or pick specific locations for each of these with their respective arguments (e.g. `--logs_root`).
+```bash
+sbatch scripts/sample_{type of model}.slurm
+```
 
-We include scripts to run BigGAN-deep, but we have not fully trained a model using them, so consider them untested. Additionally, we include scripts to run a model on CIFAR, and to run SA-GAN (with EMA) and SN-GAN on ImageNet. The SA-GAN code assumes you have 4xTitanX (or equivalent in terms of GPU RAM) and will run with a batch size of 128 and 2 gradient accumulations.
+Before running sampling, please check the `--base_root` argument to refer to the correct directory in which the sampler model is located and experiment name to match the directory in which the weights/samples are located. 
+
 
 ## An Important Note on Inception Metrics
 This repo uses the PyTorch in-built inception network to calculate IS and FID. 
@@ -58,10 +76,11 @@ We include two pretrained model checkpoints (with G, D, the EMA copy of G, the o
 - An earlier checkpoint of the first model (100k G iters), at high performance but well before collapse, which may be easier to fine-tune: [LINK](https://drive.google.com/open?id=1dmZrcVJUAWkPBGza_XgswSuT-UODXZcO)
 
 
-
 Pretrained models for Places-365 coming soon.
 
 This repo also contains scripts for porting the original TFHub BigGAN Generator weights to PyTorch. See the scripts in the TFHub folder for more details.
+
+Please refer to this repository for PyTorch version of the BigGAN models pretrained at 256 x 256: https://github.com/huggingface/pytorch-pretrained-BigGAN
 
 ## Fine-tuning, Using Your Own Dataset, or Making New Training Functions
 ![That's deep, man](imgs/DeepSamples.png?raw=true "Deep Samples")
