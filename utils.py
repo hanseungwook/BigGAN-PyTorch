@@ -26,7 +26,6 @@ from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-from tqdm import trange
 
 import datasets as dset
 
@@ -409,39 +408,54 @@ def add_sample_parser(parser):
     help='Calculate Inception metrics with sample.py? (default: %(default)s)')  
   return parser
 
+
 # Convenience dicts
 dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder, 
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
-             'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ILSVRC_HDF5,
-             'D128': dset.ImageFolder, 'D128_hdf5': dset.ImageFolder,
-             'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
+             'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ImageFolder,
+             'D64': dset.ImageFolder, 'D64_hdf5': dset.ILSVRC_HDF5,
+             'C10': dset.CIFAR10, 'C100': dset.CIFAR100,
+             'I64ext': dset.ImageFolder, 'I64ext_hdf5': dset.ILSVRC_HDF5,
+             'I128ext': dset.ImageFolder, 'I128ext_hdf5': dset.ILSVRC_HDF5}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I64': 64, 'I64_hdf5': 64,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
-               'WT64': 64, 'WT64_hdf5': 64}
+               'I64ext': 64, 'I64ext_hdf5': 64,
+               'I128ext': 128, 'I128ext_hdf5': 128,
+               'WT64': 64, 'WT64_hdf5': 64,
+               'D64': 64, 'D64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
              'I128': 'ImageNet', 'I128_hdf5': 'ILSVRC128.hdf5',
              'I256': 'ImageNet', 'I256_hdf5': 'ILSVRC256.hdf5',
+             'C10': 'cifar', 'C100': 'cifar',
+             'I64ext': 'Ext', 'I64ext_hdf5': 'I64Ext.hdf5',
+             'I128ext': 'Ext', 'I128ext_hdf5': 'I128Ext.hdf5',
              'WT64': '', 'WT64_hdf5': '',
-             'C10': 'cifar', 'C100': 'cifar'}
+             'D64': '', 'D64_hdf5': '',}
 nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
                'I128': 1000, 'I128_hdf5': 1000,
                'I256': 1000, 'I256_hdf5': 1000,
                'WT64': 1000, 'WT64_hdf5': 1000,
-               'C10': 10, 'C100': 100}
+               'D64': 1000, 'D64_hdf5': 1000,
+               'C10': 10, 'C100': 100,
+               'I64ext': 20, 'I64ext_hdf5': 20,
+               'I128ext': 10, 'I128ext_hdf5': 10}
 # Number of classes to put per sample sheet               
 classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
                           'WT64': 50, 'WT64_hdf5': 50,
-                          'C10': 10, 'C100': 100}
+                          'D64': 50, 'D64_hdf5': 50,
+                          'C10': 10, 'C100': 100,
+                          'I64ext': 20, 'I64ext_hdf5': 20,
+                          'I128ext': 20, 'I128ext_hdf5': 20}
 
 activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
@@ -507,7 +521,10 @@ def iwt(vres, inv_filters, levels=1):
   res = res[:,:,2:-2,2:-2] #removing padding
 
   return res.reshape(bs, -1, h, w)
-  
+
+def denormalize_pixel(x):
+  return (x * 0.5) + 0.5
+
 def denormalize_wt(x, shift, scale):
   return ((x * 0.5) + 0.5) * scale - shift
     
@@ -656,12 +673,11 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
 
   # Append /FILENAME.hdf5 to root if using hdf5
   # data_root += '/%s' % root_dict[dataset]
-  # data_root = 
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
-  # norm_mean = [0.5,0.5,0.5]
-  # norm_std = [0.5,0.5,0.5]
+  norm_mean = [0.5,0.5,0.5]
+  norm_std = [0.5,0.5,0.5]
   image_size = imsize_dict[dataset]
   # For image folder datasets, name of the file where we store the precomputed
   # image locations to avoid having to walk the dirs every time we load.
@@ -684,11 +700,16 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       print('Data will not be augmented...')
       if dataset in ['C10', 'C100']:
         train_transform = []
-      else:
+      elif dataset in ['D64']:
         train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(image_size*4), # 64*4 = 256
-                           transforms.ToTensor()]
-        # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
+                           transforms.Resize(image_size),
+                           transforms.ToTensor(),
+                           transforms.Normalize(mean=norm_mean, std=norm_std)]
+      elif dataset in ['WT64']:
+        train_transform = [CenterCropLongEdge(), 
+                    transforms.Resize(image_size*4), # 64*4 = 256
+                    transforms.ToTensor()]
+
     train_transform = transforms.Compose(train_transform)
     
   train_set = which_dataset(root=data_root, transform=train_transform,
@@ -1034,76 +1055,6 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
                                                  folder_number, i)
     torchvision.utils.save_image(out_ims, image_filename,
                                  nrow=samples_per_class, normalize=True)
-
-# Sample function for sample sheets
-def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
-                 samples_root, experiment_name, folder_number, z_=None):
-  # Prepare sample directory
-  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
-    os.mkdir('%s/%s' % (samples_root, experiment_name))
-  if not os.path.isdir('%s/%s/%d' % (samples_root, experiment_name, folder_number)):
-    os.mkdir('%s/%s/%d' % (samples_root, experiment_name, folder_number))
-  # loop over total number of sheets
-  for i in range(num_classes // classes_per_sheet):
-    ims = []
-    y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
-    for j in range(samples_per_class):
-      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
-        z_.sample_()
-      else:
-        z_ = torch.randn(classes_per_sheet, G.dim_z, device='cuda')        
-      with torch.no_grad():
-        if parallel:
-          o = nn.parallel.data_parallel(G, (z_[:classes_per_sheet], G.shared(y)))
-        else:
-          o = G(z_[:classes_per_sheet], G.shared(y))
-
-      ims += [o.data.cpu()]
-    # This line should properly unroll the images
-    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
-                                       ims[0].shape[3]).data.float().cpu()
-    # The path for the samples
-    image_filename = '%s/%s/%d/samples%d.jpg' % (samples_root, experiment_name, 
-                                                 folder_number, i)
-    torchvision.utils.save_image(out_ims, image_filename,
-                                 nrow=samples_per_class, normalize=True)
-
-# Sample function for sample sheets
-def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
-                 samples_root, experiment_name, folder_number, z_=None, norm_dict=None):
-  # Prepare sample directory
-  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
-    os.mkdir('%s/%s' % (samples_root, experiment_name))
-  if not os.path.isdir('%s/%s/cond' % (samples_root, experiment_name)):
-    os.mkdir('%s/%s/cond' % (samples_root, experiment_name))
-  # loop over total number of sheets
-  ims_total = []
-  y_total = []
-  for i in trange(num_classes // classes_per_sheet):
-    ims = []
-    y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
-    for j in range(samples_per_class):
-      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
-        z_.sample_()
-      else:
-        z_ = torch.randn(classes_per_sheet, G.dim_z, device='cuda')        
-      with torch.no_grad():
-        if parallel:
-          o = nn.parallel.data_parallel(G, (z_[:classes_per_sheet], G.shared(y)))
-        else:
-          o = G(z_[:classes_per_sheet], G.shared(y))
-
-      ims += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
-      
-    # This line should properly unroll the images
-    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
-                                       ims[0].shape[3]).data.float().cpu()
-    # The path for the samples
-    image_filename = '%s/%s/cond/samples%d.jpg' % (samples_root, experiment_name, i)
-    torchvision.utils.save_image(out_ims, image_filename,
-                                 nrow=samples_per_class, normalize=True)
-    print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
-    np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : y.cpu()})
 
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
