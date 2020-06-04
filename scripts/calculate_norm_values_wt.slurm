@@ -5,21 +5,22 @@
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err
 
-#SBATCH -J make_hdf5
-#SBATCH -o make_hdf5_%j.out
-#SBATCH -e make_hdf5_%j.err
+#SBATCH -J calc_norm
+#SBATCH -o calc_norm_%j.out
+#SBATCH -e calc_norm_%j.err
 
 #SBATCH --mail-user=seungwook.han@ibm.com
 #SBATCH --mail-type=ALL
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:4
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
-#SBATCH --mem=500g
+#SBATCH --ntasks-per-node=4
+#SBATCH --mem=0
 #SBATCH --time=24:00:00
+#SBATCH --exclusive
 #SBATCH -p sched_system_all 
 
 ## User python environment
@@ -63,9 +64,9 @@ date
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
-python create_hdf5_dataset_wt.py \
---data_root /data/ImageNet/ILSVRC2012/train/ --output_dir $HOME2/BigGAN-PyTorch/data/ \
---image_size 256 --batch_size 256 --num_workers=8 
+python calculate_norm_values.py \
+--dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--num_workers 2
 
 echo "Run completed at:- "
 date

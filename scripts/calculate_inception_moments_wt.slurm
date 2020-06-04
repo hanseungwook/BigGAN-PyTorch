@@ -5,9 +5,9 @@
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err
 
-#SBATCH -J make_hdf5
-#SBATCH -o make_hdf5_%j.out
-#SBATCH -e make_hdf5_%j.err
+#SBATCH -J calc_IS_FID
+#SBATCH -o calc_IS_FID_%j.out
+#SBATCH -e calc_IS_FID_%j.err
 
 #SBATCH --mail-user=seungwook.han@ibm.com
 #SBATCH --mail-type=ALL
@@ -63,9 +63,10 @@ date
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
-python create_hdf5_dataset_wt.py \
---data_root /data/ImageNet/ILSVRC2012/train/ --output_dir $HOME2/BigGAN-PyTorch/data/ \
---image_size 256 --batch_size 256 --num_workers=8 
+python calculate_inception_moments_wt.py \
+--dataset WT64 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--norm_path /nobackup/users/swhan/BigGAN-PyTorch/WT64_norm_values.npz \
+--parallel --shuffle
 
 echo "Run completed at:- "
 date
