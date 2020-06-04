@@ -63,7 +63,7 @@ date
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
-python train.py \
+python train_wt.py \
 --model BigGANdeep \
 --dataset WT64_hdf5 --shuffle --parallel --num_workers 8 --batch_size 256 --load_in_mem \
 --base_root $HOME2/BigGAN-PyTorch/results_deep_hdf5/ --data_root $HOME2/BigGAN-PyTorch1/data/ILSVRC_WT64.hdf5 \
