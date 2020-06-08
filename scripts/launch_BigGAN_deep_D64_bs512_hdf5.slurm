@@ -63,7 +63,7 @@ date
 ###  cancel jobs using command 'scancel <jobnum>'
 ###  outputs are in  multi_torch_<jobnum>.out and multi_torch_<jobnum>.err 
 
-python train.py \
+python train_pixel.py \
 --model BigGANdeep \
 --dataset D64_hdf5 --shuffle --num_workers 8 --batch_size 256 --load_in_mem \
 --base_root $HOME2/BigGAN-PyTorch/results_deep_pixel/ --data_root $HOME2/BigGAN-PyTorch/data/ILSVRC_D64.hdf5 \

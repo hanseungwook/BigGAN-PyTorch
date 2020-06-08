@@ -39,11 +39,12 @@ not-so-biggan pixel sampler:
 sbatch scripts/launch_BigGAN_deep_D64_bs512_hdf5.slurm
 ```
 
-not-so-biggan pixel sampler:
+not-so-biggan baseline sampler:
 ```bash
 sbatch scripts/launch_BigGAN_deep_baseline_bs64x32.slurm
 ```
 
+Note that the not-so-biggan wt and pixel samplers can be trained using HDF5 datasets because they work on 64 x 64 datasets and the data can all be loaded onto RAM, but the baseline sampler was trained without HDF5 dataset because the memory usage is > 200GB.
 
 
 Note also that this script uses the `--load_in_mem` arg, which loads the entire (~64GB) I128.hdf5 file into RAM for faster data loading. If you don't have enough RAM to support this (probably 96GB+), remove this argument. 
@@ -68,6 +69,10 @@ Before running sampling, please check the `--base_root` argument to refer to the
 This repo uses the PyTorch in-built inception network to calculate IS and FID. 
 These scores are different from the scores you would get using the official TF inception code, and are only for monitoring purposes!
 Run sample.py on your model, with the `--sample_npz` argument, then run inception_tf13 to calculate the actual TensorFlow IS. Note that you will need to have TensorFlow 1.3 or earlier installed, as TF1.4+ breaks the original IS code.
+
+However, the metrics reported in the not-so-biggan paper were all calculated using the original tensorflow implementation.
+
+The codebase for using the original tensorflow implementation of FID and IS calculations is located here: https://anonymous.4open.science/r/091d8fbb-5710-413f-93bf-239ea5b52d10/
 
 ## Pretrained models
 ![PyTorch Inception Score and FID](imgs/IS_FID.png)
