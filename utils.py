@@ -1053,6 +1053,43 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
                                  nrow=samples_per_class, normalize=True)
 
 
+# Sample function for sample sheets
+def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
+                 samples_root, experiment_name, folder_number, z_=None):
+  # Prepare sample directory
+  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
+    os.mkdir('%s/%s' % (samples_root, experiment_name))
+  if not os.path.isdir('%s/%s/cond' % (samples_root, experiment_name)):
+    os.mkdir('%s/%s/cond' % (samples_root, experiment_name))
+  # loop over total number of sheets
+  ims_total = []
+  y_total = []
+  for i in trange(num_classes // classes_per_sheet):
+    ims = []
+    y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
+    for j in range(samples_per_class):
+      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
+        z_.sample_()
+      else:
+        z_ = torch.randn(classes_per_sheet, G.dim_z, device='cuda')        
+      with torch.no_grad():
+        if parallel:
+          o = nn.parallel.data_parallel(G, (z_[:classes_per_sheet], G.shared(y)))
+        else:
+          o = G(z_[:classes_per_sheet], G.shared(y))
+
+      ims += [denormalize_pixel(o.data.cpu())]
+      
+    # This line should properly unroll the images
+    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
+                                       ims[0].shape[3]).data.float().cpu()
+    # The path for the samples
+    image_filename = '%s/%s/cond/samples%d.jpg' % (samples_root, experiment_name, i)
+    torchvision.utils.save_image(out_ims, image_filename,
+                                 nrow=samples_per_class, normalize=True)
+    print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
+    np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : y.cpu()})
+
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
 def interp(x0, x1, num_midpoints):
   lerp = torch.linspace(0, 1.0, num_midpoints + 2, device='cuda').to(x0.dtype)
