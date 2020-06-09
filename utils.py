@@ -18,6 +18,7 @@ import pickle
 from argparse import ArgumentParser
 import animal_hash
 import pywt
+from tqdm import trange
 
 import torch
 import torch.nn as nn
