@@ -18,7 +18,6 @@ import pickle
 from argparse import ArgumentParser
 import animal_hash
 import pywt
-from __future__ import print_function
 
 import torch
 import torch.nn as nn
