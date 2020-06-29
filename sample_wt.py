@@ -131,7 +131,7 @@ def run(config):
         # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
         x += [images[accepted_idx].cpu().numpy()]
         y += [labels[accepted_idx].cpu().numpy()]
-        print('Number of accepted samples: {}'.format(num_accepted))
+        utils.eprint('Number of accepted samples: {}'.format(num_accepted))
         
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    

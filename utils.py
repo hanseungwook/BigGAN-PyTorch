@@ -18,6 +18,7 @@ import pickle
 from argparse import ArgumentParser
 import animal_hash
 import pywt
+from __future__ import print_function
 
 import torch
 import torch.nn as nn
@@ -550,6 +551,9 @@ def get_norm_dict():
   assert (len(norm_dict) > 0)
 
   return norm_dict
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 # Create padding on patch so that this patch is formed into a square image with other patches as 0
 # 3 x 128 x 128 => 3 x target_dim x target_dim
