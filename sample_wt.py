@@ -121,6 +121,7 @@ def run(config):
         images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
         outputs = rejection_model(images_iwt)
+        print(outputs)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
 
         max_vals, max_idx = torch.max(outputs, dim=1)
