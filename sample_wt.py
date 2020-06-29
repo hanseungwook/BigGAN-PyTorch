@@ -94,7 +94,7 @@ def run(config):
     
   # Rejection sampling model (Inception V3)
   rejection_model = torch.hub.load('pytorch/vision:v0.6.0', 'inception_v3', pretrained=True)
-  model = model.to('cuda:1')
+  rejection_model = rejection_model.to('cuda:1')
 
   # Create IWT components
   inv_filters = utils.create_inv_filters('cuda:1')
@@ -122,7 +122,7 @@ def run(config):
         ])
 
         images_iwt = preprocess(images_iwt)
-        outputs = model(images_iwt)
+        outputs = rejection_model(images_iwt)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
 
         max_vals, max_idx = torch.max(outputs, dim=1)
