@@ -1,6 +1,7 @@
 ''' Sample
    This script loads a pretrained net and a weightsfile and sample '''
 import functools
+import sys
 import math
 import numpy as np
 from tqdm import tqdm, trange
@@ -132,6 +133,7 @@ def run(config):
         x += [images[accepted_idx].cpu().numpy()]
         y += [labels[accepted_idx].cpu().numpy()]
         utils.eprint('Number of accepted samples: {}'.format(num_accepted))
+        sys.stderr.flush()
         
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
