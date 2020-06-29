@@ -13,6 +13,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.nn import Parameter as P
 import torchvision
+from torchvision import transforms
 
 # Import my stuff
 import inception_utils_wt
