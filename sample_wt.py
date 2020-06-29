@@ -110,7 +110,7 @@ def run(config):
       with torch.no_grad():
         images, labels = sample()
         # Denormalize and preprocess for InceptionV3
-        images = utils.denormalize_wt(images, norm_dict['shift'], norm_dict['scale'])
+        images = utils.denormalize_wt(images.cpu(), norm_dict['shift'], norm_dict['scale'])
         images_padded = utils.zero_pad(images, 256, 'cuda:1')
 
         images_iwt = utils.iwt(images, inv_filters, levels=2)
