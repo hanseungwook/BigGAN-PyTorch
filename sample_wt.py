@@ -110,7 +110,7 @@ def run(config):
       with torch.no_grad():
         images, labels = sample()
         # Denormalize and preprocess for InceptionV3
-        images = utils.denormalize_wt(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])
+        images = utils.denormalize_wt(images, norm_dict['shift'], norm_dict['scale'])
         images_padded = utils.zero_pad(images, 256, 'cuda:1')
 
         images_iwt = utils.iwt(images, inv_filters, levels=2)
@@ -131,7 +131,7 @@ def run(config):
         num_accepted += accepted.shape[0]
         
         # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-        x += [images[accepted_idx]]
+        x += [images[accepted_idx].cpu().numpy()]
         y += [labels[accepted_idx].cpu().numpy()]
         print('Number of accepted samples: {}'.format(num_accepted))
         
