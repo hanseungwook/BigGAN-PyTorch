@@ -138,7 +138,7 @@ def run(config):
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
-    npz_filename = '{}/{}/samples_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
+    npz_filename = '{}/{}/samples_accept_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
     # npz_filename = '%s/%s/samples_z%.npz' % (config['samples_root'], experiment_name, str(config['z_var']))
     print('Saving npz to %s...' % npz_filename)
     np.savez(npz_filename, **{'x' : x, 'y' : y})
