@@ -530,7 +530,15 @@ def denormalize_wt(x, shift, scale):
     
 def normalize_wt(x, shift, scale):
   return (((x + shift) / scale) - 0.5) / 0.5
-  
+
+def normalize_batch(x, mean, std):
+  y = x.new(*x.size())
+  y[:, 0, :, :] = x[:, 0, :, :] * std[0] + mean[0]
+  y[:, 1, :, :] = x[:, 1, :, :] * std[1] + mean[1]
+  y[:, 2, :, :] = x[:, 2, :, :] * std[2] + mean[2]
+
+  return y
+
 def load_norm_dict(path):
   loaded = np.load(path)
   

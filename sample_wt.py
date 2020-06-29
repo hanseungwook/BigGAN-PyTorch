@@ -115,14 +115,11 @@ def run(config):
         images_padded = utils.zero_pad(images, 256, 'cuda:1')
 
         images_iwt = utils.iwt(images_padded, inv_filters, levels=2)
+        
+        # Resize to 299 x 299 and normalize with respective mean & std for Inception V3
         images_iwt = F.interpolate(images_iwt, 299)
+        images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-        preprocess = transforms.Compose([
-          transforms.ToTensor(),
-          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-
-        images_iwt = preprocess(images_iwt)
         outputs = rejection_model(images_iwt)
         outputs = torch.nn.functional.softmax(outputs, dim=1)
 
