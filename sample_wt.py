@@ -92,18 +92,49 @@ def run(config):
     utils.accumulate_standing_stats(G, z_, y_, config['n_classes'],
                                     config['num_standing_accumulations'])
     
-  
+  # Rejection sampling model (Inception V3)
+  rejection_model = torch.hub.load('pytorch/vision:v0.6.0', 'inception_v3', pretrained=True)
+  model = model.to('cuda:1')
+
+  # Create IWT components
+  inv_filters = utils.create_inv_filters('cuda:1')
+
   # Sample a number of images and save them to an NPZ, for use with TF-Inception
   if config['sample_npz']:
     # Lists to hold images and labels for images
     x, y = [], []
+    num_accepted = 0 
     print('Sampling %d images and saving them to npz...' % config['sample_num_npz'])
-    for i in trange(int(np.ceil(config['sample_num_npz'] / float(G_batch_size)))):
+    # for i in trange( / float(G_batch_size)))):
+    while num_accepted < int(np.ceil(config['sample_num_npz']:
       with torch.no_grad():
         images, labels = sample()
-      # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-      x += [utils.denormalize_wt(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])]
-      y += [labels.cpu().numpy()]
+        # Denormalize and preprocess for InceptionV3
+        images = utils.denormalize_wt(images.cpu().numpy(), norm_dict['shift'], norm_dict['scale'])
+        images_padded = utils.zero_pad(images, 256, 'cuda:1')
+
+        images_iwt = utils.iwt(images, inv_filters, levels=2)
+
+        preprocess = transforms.Compose([
+          transforms.Resize(299),
+          transforms.CenterCrop(299),
+          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+        images_iwt = preprocess(images_iwt)
+        outputs = model(images_iwt)
+        outputs = torch.nn.functional.softmax(outputs, dim=1)
+
+        max_vals, max_idx = torch.max(outputs, dim=1)
+        accepted_idx = max_vals > 0.9
+        accepted = outputs[accepted_idx]
+        num_accepted += accepted.shape[0]
+        
+        # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
+        x += [images[accepted_idx]]
+        y += [labels[accepted_idx].cpu().numpy()]
+        print('Number of accepted samples: {}'.format(num_accepted))
+        
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
@@ -124,37 +155,37 @@ def run(config):
   #                        z_=z_,)
 
   # Prepare sample sheets and save samples into npz
-  if config['sample_sheets']:
-    print('Preparing conditional sample sheets...')
-    utils.save_sample_sheet(G, classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
-                         num_classes=config['n_classes'], 
-                         samples_per_class=10, parallel=config['parallel'],
-                         samples_root=config['samples_root'], 
-                         experiment_name=experiment_name,
-                         folder_number=config['sample_sheet_folder_num'],
-                         z_=z_,
-                         norm_dict=norm_dict)
+  # if config['sample_sheets']:
+  #   print('Preparing conditional sample sheets...')
+  #   utils.save_sample_sheet(G, classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
+  #                        num_classes=config['n_classes'], 
+  #                        samples_per_class=10, parallel=config['parallel'],
+  #                        samples_root=config['samples_root'], 
+  #                        experiment_name=experiment_name,
+  #                        folder_number=config['sample_sheet_folder_num'],
+  #                        z_=z_,
+  #                        norm_dict=norm_dict)
 
-  # Sample interp sheets
-  if config['sample_interps']:
-    print('Preparing interp sheets...')
-    for fix_z, fix_y in zip([False, False, True], [False, True, False]):
-      utils.interp_sheet(G, num_per_sheet=16, num_midpoints=8,
-                         num_classes=config['n_classes'], 
-                         parallel=config['parallel'], 
-                         samples_root=config['samples_root'], 
-                         experiment_name=experiment_name,
-                         folder_number=config['sample_sheet_folder_num'], 
-                         sheet_number=0,
-                         fix_z=fix_z, fix_y=fix_y, device='cuda')
-  # Sample random sheet
-  if config['sample_random']:
-    print('Preparing random sample sheet...')
-    images, labels = sample()    
-    torchvision.utils.save_image(images.float(),
-                                 '%s/%s/random_samples.jpg' % (config['samples_root'], experiment_name),
-                                 nrow=int(G_batch_size**0.5),
-                                 normalize=True)
+  # # Sample interp sheets
+  # if config['sample_interps']:
+  #   print('Preparing interp sheets...')
+  #   for fix_z, fix_y in zip([False, False, True], [False, True, False]):
+  #     utils.interp_sheet(G, num_per_sheet=16, num_midpoints=8,
+  #                        num_classes=config['n_classes'], 
+  #                        parallel=config['parallel'], 
+  #                        samples_root=config['samples_root'], 
+  #                        experiment_name=experiment_name,
+  #                        folder_number=config['sample_sheet_folder_num'], 
+  #                        sheet_number=0,
+  #                        fix_z=fix_z, fix_y=fix_y, device='cuda')
+  # # Sample random sheet
+  # if config['sample_random']:
+  #   print('Preparing random sample sheet...')
+  #   images, labels = sample()    
+  #   torchvision.utils.save_image(images.float(),
+  #                                '%s/%s/random_samples.jpg' % (config['samples_root'], experiment_name),
+  #                                nrow=int(G_batch_size**0.5),
+  #                                normalize=True)
 
   # # Get Inception Score and FID
   # get_inception_metrics = inception_utils.prepare_inception_metrics(config['dataset'], config['parallel'], config['no_fid'])
