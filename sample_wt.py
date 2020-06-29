@@ -106,7 +106,7 @@ def run(config):
     num_accepted = 0 
     print('Sampling %d images and saving them to npz...' % config['sample_num_npz'])
     # for i in trange( / float(G_batch_size)))):
-    while num_accepted < int(np.ceil(config['sample_num_npz']:
+    while num_accepted < int(np.ceil(config['sample_num_npz'])):
       with torch.no_grad():
         images, labels = sample()
         # Denormalize and preprocess for InceptionV3
