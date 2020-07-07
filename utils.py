@@ -385,6 +385,9 @@ def add_sample_parser(parser):
     help='Produce class-conditional sample sheets and stick them in '
          'the samples root? (default: %(default)s)')
   parser.add_argument(
+    '--sample_class_rejection', action='store_true', default=False,
+    help='Produce class-conditional samples with rejection model (default: %(default)s)')
+  parser.add_argument(
     '--sample_interps', action='store_true', default=False,
     help='Produce interpolation sheets and stick them in '
          'the samples root? (default: %(default)s)')         
@@ -1104,6 +1107,67 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
     print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
     np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : y.cpu()})
 
+# Sample function for class-wise rejection sampling
+def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, samples_per_class, parallel,
+                 samples_root, experiment_name, folder_number, z_=None, norm_dict=None):
+  # Prepare sample directory
+  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
+    os.mkdir('%s/%s' % (samples_root, experiment_name))
+  if not os.path.isdir('%s/%s/classes' % (samples_root, experiment_name)):
+    os.mkdir('%s/%s/classes' % (samples_root, experiment_name))
+
+  num_samples_per_class = 10
+  for y in trange(num_classes):
+    ims = []
+    labels = []
+    num_accepted = 0
+
+    while num_accepted < num_samples_per_class:
+      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
+        z_.sample_()
+      else:
+        z_ = torch.randn(num_samples_per_class, G.dim_z, device='cuda')        
+      with torch.no_grad():
+        if parallel:
+          o = nn.parallel.data_parallel(G, (z_[:num_samples_per_class], G.shared(y)))
+        else:
+          o = G(z_[:num_samples_per_class], G.shared(y))
+      
+      images = utils.denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])
+      images_padded = utils.zero_pad(images, 256, 'cuda:1')
+
+      images_iwt = utils.iwt(images_padded, inv_filters, levels=2)
+      
+      # Resize to 299 x 299 and normalize with respective mean & std for Inception V3
+      images_iwt = F.interpolate(images_iwt, 299)
+      images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+      outputs = rejection_model(images_iwt)[0]
+      outputs = torch.nn.functional.softmax(outputs, dim=1)
+
+      max_vals, max_idx = torch.max(outputs, dim=1)
+      accepted_idx = max_vals > 0.9
+      accepted = outputs[accepted_idx]
+      num_accepted += accepted.shape[0]
+      
+      # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
+      ims += [images[accepted_idx].cpu().numpy()]
+      labels += [y] * accepted.shape[0]
+      utils.eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
+      sys.stderr.flush()
+      
+    # This line should properly unroll the images
+    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
+                                       ims[0].shape[3]).data.float().cpu()
+
+    out_ims = out_ims[:num_samples_per_class]
+    labels = labels[:num_samples_per_class]
+    # The path for the samples
+    image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
+    torchvision.utils.save_image(out_ims, image_filename,
+                                 nrow=10, normalize=True)
+    print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
+    np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
 def interp(x0, x1, num_midpoints):

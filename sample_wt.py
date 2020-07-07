@@ -166,6 +166,19 @@ def run(config):
   #                        z_=z_,
   #                        norm_dict=norm_dict)
 
+  # Prepare sample sheets and save samples into npz
+  if config['sample_class_rejection']:
+    print('Preparing conditional sample sheets...')
+    utils.sample_class_rejection(G, rejection_model,
+                         classes_per_sheet=utils.classes_per_sheet_dict[config['dataset']], 
+                         num_classes=config['n_classes'], 
+                         samples_per_class=10, parallel=config['parallel'],
+                         samples_root=config['samples_root'], 
+                         experiment_name=experiment_name,
+                         folder_number=config['sample_sheet_folder_num'],
+                         z_=z_,
+                         norm_dict=norm_dict)
+
   # # Sample interp sheets
   # if config['sample_interps']:
   #   print('Preparing interp sheets...')
