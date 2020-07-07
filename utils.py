@@ -1167,12 +1167,13 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
     
     if (len(ims) >= num_samples_per_class):
       # This line should properly unroll the images
+      eprint('Length of ims: {}'.format(len(ims))
       out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
       labels = labels[:num_samples_per_class] 
 
       # The path for the samples
       image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
-      torchvision.utils.save_image(out_ims, image_filename,
+      torchvision.utils.save_image(torch.from_nump(out_ims), image_filename,
                                   nrow=10, normalize=True)
       print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
       np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
