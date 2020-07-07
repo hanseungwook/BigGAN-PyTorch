@@ -1157,15 +1157,13 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
       # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
       ims += [images[accepted_idx].cpu().numpy()]
       labels += [y] * accepted.shape[0]
-      utils.eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
+      eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
       sys.stderr.flush()
       
     # This line should properly unroll the images
-    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
-                                       ims[0].shape[3]).data.float().cpu()
+    out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
+    labels = np.concatenate(labels, 0)[:num_samples_per_class] 
 
-    out_ims = out_ims[:num_samples_per_class]
-    labels = labels[:num_samples_per_class]
     # The path for the samples
     image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
     torchvision.utils.save_image(out_ims, image_filename,
