@@ -1125,6 +1125,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
     ims = []
     labels = []
     num_accepted = 0
+    num_loop = 0
 
     while num_accepted < num_samples_per_class:
       if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
@@ -1153,23 +1154,28 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
       accepted_idx = max_vals > 0.95
       accepted = outputs[accepted_idx]
       num_accepted += accepted.shape[0]
+      num_loop += 1
       
       # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
       ims += [images[accepted_idx].cpu().numpy()]
       labels += [y] * accepted.shape[0]
       eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
       sys.stderr.flush()
-      
-    # This line should properly unroll the images
-    out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
-    labels = np.concatenate(labels, 0)[:num_samples_per_class] 
 
-    # The path for the samples
-    image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
-    torchvision.utils.save_image(out_ims, image_filename,
-                                 nrow=10, normalize=True)
-    print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
-    np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
+      if num_loop > 10000:
+        break
+    
+    if out_ims and labels:
+      # This line should properly unroll the images
+      out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
+      labels = np.concatenate(labels, 0)[:num_samples_per_class] 
+
+      # The path for the samples
+      image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
+      torchvision.utils.save_image(out_ims, image_filename,
+                                  nrow=10, normalize=True)
+      print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
+      np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
 def interp(x0, x1, num_midpoints):
