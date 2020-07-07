@@ -1118,6 +1118,9 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
     os.mkdir('%s/%s/classes' % (samples_root, experiment_name))
 
   num_samples_per_class = 10
+  # Create IWT components
+  inv_filters = utils.create_inv_filters('cuda:1')
+
   for y in trange(num_classes):
     ims = []
     labels = []
@@ -1134,14 +1137,14 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
         else:
           o = G(z_[:num_samples_per_class], G.shared(torch.tensor([y]*num_samples_per_class).to('cuda')))
       
-      images = utils.denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])
-      images_padded = utils.zero_pad(images, 256, 'cuda:1')
+      images = denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])
+      images_padded = zero_pad(images, 256, 'cuda:1')
 
-      images_iwt = utils.iwt(images_padded, inv_filters, levels=2)
+      images_iwt = iwt(images_padded, inv_filters, levels=2)
       
       # Resize to 299 x 299 and normalize with respective mean & std for Inception V3
       images_iwt = F.interpolate(images_iwt, 299)
-      images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+      images_iwt = normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
       outputs = rejection_model(images_iwt)[0]
       outputs = torch.nn.functional.softmax(outputs, dim=1)
