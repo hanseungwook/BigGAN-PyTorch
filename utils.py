@@ -26,6 +26,7 @@ from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from tqdm import trange
 
 import datasets as dset
 
