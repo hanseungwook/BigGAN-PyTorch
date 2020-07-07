@@ -1119,7 +1119,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
 
   num_samples_per_class = 10
   # Create IWT components
-  inv_filters = utils.create_inv_filters('cuda:1')
+  inv_filters = create_inv_filters('cuda:1')
 
   for y in trange(num_classes):
     ims = []
