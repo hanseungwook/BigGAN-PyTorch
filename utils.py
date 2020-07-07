@@ -1146,7 +1146,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
       outputs = torch.nn.functional.softmax(outputs, dim=1)
 
       max_vals, max_idx = torch.max(outputs, dim=1)
-      accepted_idx = max_vals > 0.9
+      accepted_idx = max_vals > 0.95
       accepted = outputs[accepted_idx]
       num_accepted += accepted.shape[0]
       
