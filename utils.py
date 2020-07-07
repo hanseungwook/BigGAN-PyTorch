@@ -1173,7 +1173,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
 
       # The path for the samples
       image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
-      torchvision.utils.save_image(torch.from_nump(out_ims), image_filename,
+      torchvision.utils.save_image(torch.from_numpy(out_ims), image_filename,
                                   nrow=10, normalize=True)
       print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
       np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
