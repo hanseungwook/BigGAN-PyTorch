@@ -125,7 +125,7 @@ def run(config):
         outputs = torch.nn.functional.softmax(outputs, dim=1)
 
         max_vals, max_idx = torch.max(outputs, dim=1)
-        accepted_idx = max_vals > 0.9
+        accepted_idx = max_vals > 0.95
         accepted = outputs[accepted_idx]
         num_accepted += accepted.shape[0]
         
@@ -138,7 +138,7 @@ def run(config):
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
-    npz_filename = '{}/{}/samples_accept_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
+    npz_filename = '{}/{}/samples_accept95_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
     # npz_filename = '%s/%s/samples_z%.npz' % (config['samples_root'], experiment_name, str(config['z_var']))
     print('Saving npz to %s...' % npz_filename)
     np.savez(npz_filename, **{'x' : x, 'y' : y})
