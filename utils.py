@@ -1167,7 +1167,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
     
     if (len(ims) >= num_samples_per_class):
       # This line should properly unroll the images
-      eprint('Length of ims: {}'.format(len(ims))
+      eprint('Length of ims: {}'.format(len(ims)))
       out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
       labels = labels[:num_samples_per_class] 
 
