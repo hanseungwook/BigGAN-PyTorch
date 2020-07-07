@@ -1130,9 +1130,9 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
         z_ = torch.randn(num_samples_per_class, G.dim_z, device='cuda')        
       with torch.no_grad():
         if parallel:
-          o = nn.parallel.data_parallel(G, (z_[:num_samples_per_class], G.shared(y)))
+          o = nn.parallel.data_parallel(G, (z_[:num_samples_per_class], G.shared(torch.tensor(y))))
         else:
-          o = G(z_[:num_samples_per_class], G.shared(y))
+          o = G(z_[:num_samples_per_class], G.shared(torch.tensor(y)))
       
       images = utils.denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])
       images_padded = utils.zero_pad(images, 256, 'cuda:1')
