@@ -1168,7 +1168,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
     if (len(ims) >= num_samples_per_class):
       # This line should properly unroll the images
       out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
-      labels = np.concatenate(labels, 0)[:num_samples_per_class] 
+      labels = labels[:num_samples_per_class] 
 
       # The path for the samples
       image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
