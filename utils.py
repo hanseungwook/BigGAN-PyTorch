@@ -1160,7 +1160,7 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
       ims += [images[accepted_idx].cpu().numpy()]
       labels += [y] * accepted.shape[0]
 
-      if num_loop > 5000:
+      if num_loop > 1000:
         break
     
     eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
