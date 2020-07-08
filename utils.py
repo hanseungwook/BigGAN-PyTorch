@@ -1159,11 +1159,12 @@ def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, s
       # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
       ims += [images[accepted_idx].cpu().numpy()]
       labels += [y] * accepted.shape[0]
-      eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
-      sys.stderr.flush()
 
       if num_loop > 10000:
         break
+    
+    eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
+    sys.stderr.flush()
     
     if (len(labels) >= num_samples_per_class):
       # This line should properly unroll the images
