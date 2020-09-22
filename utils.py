@@ -508,10 +508,10 @@ def iwt(vres, inv_filters, levels=1):
 
   return res.reshape(bs, -1, h, w)
   
-def denormalize(x, shift, scale):
+def denormalize_wt(x, shift, scale):
   return ((x * 0.5) + 0.5) * scale - shift
     
-def normalize(x, shift, scale):
+def normalize_wt(x, shift, scale):
   return (((x + shift) / scale) - 0.5) / 0.5
   
 def load_norm_dict(path):
@@ -1091,7 +1091,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
         else:
           o = G(z_[:classes_per_sheet], G.shared(y))
 
-      ims += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
+      ims += [denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
       
     # This line should properly unroll the images
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 

@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from torch.nn import Parameter as P
 from torchvision.models.inception import inception_v3
 
-from utils import create_inv_filters, zero_pad, get_norm_dict, denormalize, iwt
+from utils import create_inv_filters, zero_pad, get_norm_dict, denormalize_wt, iwt
 
 
 # Module that wraps the inception network to enable use with dataparallel and
@@ -260,7 +260,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
 
       # Clone, denormalize, pad to 256, and IWT twice
       images_full = images.clone()
-      images_full = denormalize(images_full, shift.cuda(), scale.cuda())
+      images_full = denormalize_wt(images_full, shift.cuda(), scale.cuda())
       images_full = zero_pad(images, 256, images.device) # Full image size hard-coded
       images_full = iwt(images_full, inv_filters, levels=2)
 
