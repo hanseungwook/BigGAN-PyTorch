@@ -24,7 +24,7 @@ import torchvision
 import wandb
 
 # Import my stuff
-import inception_utils_wt
+import inception_utils_wt as inception_utils
 import utils
 import losses
 import train_fns
