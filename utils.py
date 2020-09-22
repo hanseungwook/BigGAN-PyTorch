@@ -386,9 +386,6 @@ def add_sample_parser(parser):
     help='Produce class-conditional sample sheets and stick them in '
          'the samples root? (default: %(default)s)')
   parser.add_argument(
-    '--sample_class_rejection', action='store_true', default=False,
-    help='Produce class-conditional samples with rejection model (default: %(default)s)')
-  parser.add_argument(
     '--sample_interps', action='store_true', default=False,
     help='Produce interpolation sheets and stick them in '
          'the samples root? (default: %(default)s)')         
@@ -412,54 +409,39 @@ def add_sample_parser(parser):
     help='Calculate Inception metrics with sample.py? (default: %(default)s)')  
   return parser
 
-
 # Convenience dicts
 dset_dict = {'I32': dset.ImageFolder, 'I64': dset.ImageFolder, 
              'I128': dset.ImageFolder, 'I256': dset.ImageFolder,
              'I32_hdf5': dset.ILSVRC_HDF5, 'I64_hdf5': dset.ILSVRC_HDF5, 
              'I128_hdf5': dset.ILSVRC_HDF5, 'I256_hdf5': dset.ILSVRC_HDF5,
-             'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ImageFolder,
-             'D64': dset.ImageFolder, 'D64_hdf5': dset.ILSVRC_HDF5,
-             'C10': dset.CIFAR10, 'C100': dset.CIFAR100,
-             'I64ext': dset.ImageFolder, 'I64ext_hdf5': dset.ILSVRC_HDF5,
-             'I128ext': dset.ImageFolder, 'I128ext_hdf5': dset.ILSVRC_HDF5}
+             'WT64': dset.ImageFolder, 'WT64_hdf5': dset.ILSVRC_HDF5,
+             'D128': dset.ImageFolder, 'D128_hdf5': dset.ImageFolder,
+             'C10': dset.CIFAR10, 'C100': dset.CIFAR100}
 imsize_dict = {'I32': 32, 'I32_hdf5': 32,
                'I64': 64, 'I64_hdf5': 64,
                'I128': 128, 'I128_hdf5': 128,
                'I256': 256, 'I256_hdf5': 256,
                'C10': 32, 'C100': 32,
-               'I64ext': 64, 'I64ext_hdf5': 64,
-               'I128ext': 128, 'I128ext_hdf5': 128,
-               'WT64': 64, 'WT64_hdf5': 64,
-               'D64': 64, 'D64_hdf5': 64}
+               'WT64': 64, 'WT64_hdf5': 64}
 root_dict = {'I32': 'ImageNet', 'I32_hdf5': 'ILSVRC32.hdf5',
              'I64': 'ImageNet', 'I64_hdf5': 'ILSVRC64.hdf5',
              'I128': 'ImageNet', 'I128_hdf5': 'ILSVRC128.hdf5',
              'I256': 'ImageNet', 'I256_hdf5': 'ILSVRC256.hdf5',
-             'C10': 'cifar', 'C100': 'cifar',
-             'I64ext': 'Ext', 'I64ext_hdf5': 'I64Ext.hdf5',
-             'I128ext': 'Ext', 'I128ext_hdf5': 'I128Ext.hdf5',
              'WT64': '', 'WT64_hdf5': '',
-             'D64': '', 'D64_hdf5': '',}
+             'C10': 'cifar', 'C100': 'cifar'}
 nclass_dict = {'I32': 1000, 'I32_hdf5': 1000,
                'I64': 1000, 'I64_hdf5': 1000,
                'I128': 1000, 'I128_hdf5': 1000,
                'I256': 1000, 'I256_hdf5': 1000,
                'WT64': 1000, 'WT64_hdf5': 1000,
-               'D64': 1000, 'D64_hdf5': 1000,
-               'C10': 10, 'C100': 100,
-               'I64ext': 20, 'I64ext_hdf5': 20,
-               'I128ext': 10, 'I128ext_hdf5': 10}
+               'C10': 10, 'C100': 100}
 # Number of classes to put per sample sheet               
 classes_per_sheet_dict = {'I32': 50, 'I32_hdf5': 50,
                           'I64': 50, 'I64_hdf5': 50,
                           'I128': 20, 'I128_hdf5': 20,
                           'I256': 20, 'I256_hdf5': 20,
                           'WT64': 50, 'WT64_hdf5': 50,
-                          'D64': 50, 'D64_hdf5': 50,
-                          'C10': 10, 'C100': 100,
-                          'I64ext': 20, 'I64ext_hdf5': 20,
-                          'I128ext': 20, 'I128ext_hdf5': 20}
+                          'C10': 10, 'C100': 100}
 
 activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
                    'relu': nn.ReLU(inplace=False),
@@ -525,24 +507,13 @@ def iwt(vres, inv_filters, levels=1):
   res = res[:,:,2:-2,2:-2] #removing padding
 
   return res.reshape(bs, -1, h, w)
-
-def denormalize_pixel(x):
-  return (x * 0.5) + 0.5
-
-def denormalize_wt(x, shift, scale):
+  
+def denormalize(x, shift, scale):
   return ((x * 0.5) + 0.5) * scale - shift
     
-def normalize_wt(x, shift, scale):
+def normalize(x, shift, scale):
   return (((x + shift) / scale) - 0.5) / 0.5
-
-def normalize_batch(x, mean, std):
-  y = x.new(*x.size())
-  y[:, 0, :, :] = x[:, 0, :, :] * std[0] + mean[0]
-  y[:, 1, :, :] = x[:, 1, :, :] * std[1] + mean[1]
-  y[:, 2, :, :] = x[:, 2, :, :] * std[2] + mean[2]
-
-  return y
-
+  
 def load_norm_dict(path):
   loaded = np.load(path)
   
@@ -554,9 +525,6 @@ def get_norm_dict():
   assert (len(norm_dict) > 0)
 
   return norm_dict
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 # Create padding on patch so that this patch is formed into a square image with other patches as 0
 # 3 x 128 x 128 => 3 x target_dim x target_dim
@@ -639,7 +607,6 @@ class RandomCropLongEdge(object):
 # training from the same sample regardless of if we stop mid-epoch
 class MultiEpochSampler(torch.utils.data.Sampler):
   r"""Samples elements randomly over multiple epochs
-
   Arguments:
       data_source (Dataset): dataset to sample from
       num_epochs (int) : Number of times to loop over the dataset
@@ -688,11 +655,12 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
 
   # Append /FILENAME.hdf5 to root if using hdf5
   # data_root += '/%s' % root_dict[dataset]
+  # data_root = 
   print('Using dataset root location %s' % data_root)
 
   which_dataset = dset_dict[dataset]
-  norm_mean = [0.5,0.5,0.5]
-  norm_std = [0.5,0.5,0.5]
+  # norm_mean = [0.5,0.5,0.5]
+  # norm_std = [0.5,0.5,0.5]
   image_size = imsize_dict[dataset]
   # For image folder datasets, name of the file where we store the precomputed
   # image locations to avoid having to walk the dirs every time we load.
@@ -715,16 +683,11 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       print('Data will not be augmented...')
       if dataset in ['C10', 'C100']:
         train_transform = []
-      elif dataset in ['D64', 'IN256']:
+      else:
         train_transform = [CenterCropLongEdge(), 
-                           transforms.Resize(image_size),
-                           transforms.ToTensor(),
-                           transforms.Normalize(mean=norm_mean, std=norm_std)]
-      elif dataset in ['WT64']:
-        train_transform = [CenterCropLongEdge(), 
-                    transforms.Resize(image_size*4), # 64*4 = 256
-                    transforms.ToTensor()]
-
+                           transforms.Resize(image_size*4), # 64*4 = 256
+                           transforms.ToTensor()]
+        # train_transform = [transforms.Resize(image_size), transforms.CenterCrop]
     train_transform = transforms.Compose(train_transform)
     
   train_set = which_dataset(root=data_root, transform=train_transform,
@@ -983,7 +946,6 @@ def write_metadata(logs_root, experiment_name, config, state_dict):
 
 """
 Very basic progress indicator to wrap an iterable in.
-
 Author: Jan Schlüter
 Andy's adds: time elapsed in addition to ETA, makes it possible to add
 estimated time to 1k iters instead of estimated time to completion.
@@ -1072,6 +1034,39 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
                                  nrow=samples_per_class, normalize=True)
 
 # Sample function for sample sheets
+def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
+                 samples_root, experiment_name, folder_number, z_=None):
+  # Prepare sample directory
+  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
+    os.mkdir('%s/%s' % (samples_root, experiment_name))
+  if not os.path.isdir('%s/%s/%d' % (samples_root, experiment_name, folder_number)):
+    os.mkdir('%s/%s/%d' % (samples_root, experiment_name, folder_number))
+  # loop over total number of sheets
+  for i in range(num_classes // classes_per_sheet):
+    ims = []
+    y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
+    for j in range(samples_per_class):
+      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
+        z_.sample_()
+      else:
+        z_ = torch.randn(classes_per_sheet, G.dim_z, device='cuda')        
+      with torch.no_grad():
+        if parallel:
+          o = nn.parallel.data_parallel(G, (z_[:classes_per_sheet], G.shared(y)))
+        else:
+          o = G(z_[:classes_per_sheet], G.shared(y))
+
+      ims += [o.data.cpu()]
+    # This line should properly unroll the images
+    out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
+                                       ims[0].shape[3]).data.float().cpu()
+    # The path for the samples
+    image_filename = '%s/%s/%d/samples%d.jpg' % (samples_root, experiment_name, 
+                                                 folder_number, i)
+    torchvision.utils.save_image(out_ims, image_filename,
+                                 nrow=samples_per_class, normalize=True)
+
+# Sample function for sample sheets
 def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
                  samples_root, experiment_name, folder_number, z_=None, norm_dict=None):
   # Prepare sample directory
@@ -1096,7 +1091,7 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
         else:
           o = G(z_[:classes_per_sheet], G.shared(y))
 
-      ims += [denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
+      ims += [denormalize(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])]
       
     # This line should properly unroll the images
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
@@ -1108,76 +1103,6 @@ def save_sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, para
     print('Saving npz to %s...' % 'class_samples{}.npz'.format(i))
     np.savez('class_samples_{}.npz'.format(i), **{'x' : out_ims.numpy(), 'y' : y.cpu()})
 
-# Sample function for class-wise rejection sampling
-def sample_class_rejection(G, rejection_model, classes_per_sheet, num_classes, samples_per_class, parallel,
-                 samples_root, experiment_name, folder_number, z_=None, norm_dict=None):
-  # Prepare sample directory
-  if not os.path.isdir('%s/%s' % (samples_root, experiment_name)):
-    os.mkdir('%s/%s' % (samples_root, experiment_name))
-  if not os.path.isdir('%s/%s/classes' % (samples_root, experiment_name)):
-    os.mkdir('%s/%s/classes' % (samples_root, experiment_name))
-
-  num_samples_per_class = 10
-  # Create IWT components
-  inv_filters = create_inv_filters('cuda:1')
-
-  for y in trange(num_classes):
-    ims = []
-    labels = []
-    num_accepted = 0
-    num_loop = 0
-
-    while num_accepted < num_samples_per_class:
-      if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
-        z_.sample_()
-      else:
-        z_ = torch.randn(num_samples_per_class, G.dim_z, device='cuda')        
-      with torch.no_grad():
-        if parallel:
-          o = nn.parallel.data_parallel(G, (z_[:num_samples_per_class], G.shared(torch.tensor([y]*num_samples_per_class).to('cuda'))))
-        else:
-          o = G(z_[:num_samples_per_class], G.shared(torch.tensor([y]*num_samples_per_class).to('cuda')))
-      
-      images = denormalize_wt(o.data.cpu(), norm_dict['shift'], norm_dict['scale'])
-      images_padded = zero_pad(images, 256, 'cuda:1')
-
-      images_iwt = iwt(images_padded, inv_filters, levels=2)
-      
-      # Resize to 299 x 299 and normalize with respective mean & std for Inception V3
-      images_iwt = F.interpolate(images_iwt, 299)
-      images_iwt = normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-      outputs = rejection_model(images_iwt)[0]
-      outputs = torch.nn.functional.softmax(outputs, dim=1)
-
-      max_vals, max_idx = torch.max(outputs, dim=1)
-      accepted_idx = max_vals > 0.95
-      accepted = outputs[accepted_idx]
-      num_accepted += accepted.shape[0]
-      num_loop += 1
-      
-      # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-      ims += [images[accepted_idx].cpu().numpy()]
-      labels += [y] * accepted.shape[0]
-
-      if num_loop > 1000:
-        break
-    
-    eprint('Class {} number of accepted samples: {}'.format(y, num_accepted))
-    sys.stderr.flush()
-    
-    if (len(labels) >= num_samples_per_class):
-      # This line should properly unroll the images
-      eprint('Length of ims: {}'.format(len(ims)))
-      out_ims = np.concatenate(ims, 0)[:num_samples_per_class]
-      labels = labels[:num_samples_per_class] 
-
-      # The path for the samples
-      image_filename = '%s/%s/classes/samples%d.jpg' % (samples_root, experiment_name, y)
-      torchvision.utils.save_image(torch.from_numpy(out_ims), image_filename,
-                                  nrow=10, normalize=True)
-      print('Saving npz to %s...' % 'class_samples{}.npz'.format(y))
-      np.savez('class_samples_{}.npz'.format(y), **{'x' : out_ims.numpy(), 'y' : labels})
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
 def interp(x0, x1, num_midpoints):
