@@ -81,8 +81,8 @@ python train_wt.py \
 --test_every 2000 --save_every 2000 --num_best_copies 5 --num_save_copies 2 --seed 0 \
 --use_multiepoch_sampler --num_epochs=100 \
 --wandb_project biggan_bs1024_hdf5_1 \
-# --experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs256_nDa2_nGa2_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
-# --resume --load_weights copy0
+--experiment_name BigGAN_WT64_hdf5_seed0_Gch96_Dch96_bs256_nDa4_nGa4_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
+--resume --load_weights copy0 \
 
 echo "Run completed at:- "
 date
