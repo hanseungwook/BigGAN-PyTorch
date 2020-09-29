@@ -449,6 +449,9 @@ activation_dict = {'inplace_relu': nn.ReLU(inplace=True),
 
 norm_dict = {}
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    
 # WT filter creating function
 def create_filters(device, wt_fn='bior2.2'):
   w = pywt.Wavelet(wt_fn)
