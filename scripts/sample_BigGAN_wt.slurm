@@ -79,7 +79,7 @@ python sample_wt.py \
 --wandb_project biggan_bs1024_hdf5_1 \
 --experiment_name BigGAN_WT64_hdf5_seed0_Gch96_Dch96_bs256_nDa4_nGa4_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
 --resume --load_weights copy1 \
---G_batch_size 512 --z_var 1.0 \
+--G_batch_size 512 --z_var 1.0 --sample_npz --sample_num_npz 50000 \
 # --sample_trunc_curves 0.05_0.05_1.0 --sample_class_rejection
 
 echo "Run completed at:- "
