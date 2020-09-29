@@ -58,10 +58,10 @@ date
 # use z_var to change the variance of z for all the sampling
 # use --mybn --accumulate_stats --num_standing_accumulations 32 to 
 # use running stats
-python sample_wt.py \
 #--model BigGANdeep \
+python sample_wt.py \
 --dataset WT64 --shuffle  --num_workers 8 --batch_size 256 \
---base_root $HOME2/ICLR/biggan/BigGAN-PyTorch-3/results_deep_hdf5 --data_root /data/ImageNet/ILSVRC2012/train/ \
+--base_root $HOME2/ICLR/biggan/BigGAN-PyTorch-3/results_deep_hdf5/ --data_root /data/ImageNet/ILSVRC2012/train/ \
 --norm_path /nobackup/users/swhan/BigGAN-PyTorch1/WT64_norm_values.npz \
 --num_G_accumulations 4 --num_D_accumulations 4 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
