@@ -95,8 +95,8 @@ def run(config):
                                     config['num_standing_accumulations'])
     
   # Rejection sampling model (Inception V3)
-  rejection_model = torch.hub.load('pytorch/vision:v0.6.0', 'inception_v3', pretrained=True)
-  rejection_model = rejection_model.to('cuda:1')
+  # rejection_model = torch.hub.load('pytorch/vision:v0.6.0', 'inception_v3', pretrained=True)
+  # rejection_model = rejection_model.to('cuda:1')
 
   # Create IWT components
   inv_filters = utils.create_inv_filters('cuda:1')
@@ -118,27 +118,28 @@ def run(config):
         images_iwt = utils.iwt(images_padded, inv_filters, levels=2)
         
         # Resize to 299 x 299 and normalize with respective mean & std for Inception V3
-        images_iwt = F.interpolate(images_iwt, 299)
-        images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # images_iwt = F.interpolate(images_iwt, 299)
+        # images_iwt = utils.normalize_batch(images_iwt, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-        outputs = rejection_model(images_iwt)[0]
-        outputs = torch.nn.functional.softmax(outputs, dim=1)
+        # outputs = rejection_model(images_iwt)[0]
+        # outputs = torch.nn.functional.softmax(outputs, dim=1)
 
-        max_vals, max_idx = torch.max(outputs, dim=1)
-        accepted_idx = max_vals > 0.95
-        accepted = outputs[accepted_idx]
-        num_accepted += accepted.shape[0]
+        # max_vals, max_idx = torch.max(outputs, dim=1)
+        # accepted_idx = max_vals > 0.95
+        # accepted = outputs[accepted_idx]
+        # num_accepted += accepted.shape[0]
+        num_accepted += images.shape[0]
         
         # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-        x += [images[accepted_idx].cpu().numpy()]
-        y += [labels[accepted_idx].cpu().numpy()]
+        x += [images.cpu().numpy()]
+        y += [labels.cpu().numpy()]
         utils.eprint('Number of accepted samples: {}'.format(num_accepted))
         sys.stderr.flush()
         
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
-    npz_filename = '{}/{}/samples_accept95_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
+    npz_filename = '{}/{}/samples_z{}.npz'.format(config['samples_root'], experiment_name, config['z_var'])
     # npz_filename = '%s/%s/samples_z%.npz' % (config['samples_root'], experiment_name, str(config['z_var']))
     print('Saving npz to %s...' % npz_filename)
     np.savez(npz_filename, **{'x' : x, 'y' : y})
