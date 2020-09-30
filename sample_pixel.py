@@ -15,7 +15,7 @@ from torch.nn import Parameter as P
 import torchvision
 
 # Import my stuff
-import inception_utils
+import inception_utils_pixel
 import utils
 import losses
 
