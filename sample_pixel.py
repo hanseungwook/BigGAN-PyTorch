@@ -105,9 +105,9 @@ def run(config):
     x, y = [], []
     num_accepted = 0
     pbar = tqdm(total=config['sample_num_npz'])
-
-    while num_accepted < config['sample_num_npz']:
     print('Sampling %d images and saving them to npz...' % config['sample_num_npz'])
+
+    while num_accepted < config['sample_num_npz']:  
       with torch.no_grad():
         images, labels = sample()
         images = utils.denormalize_pixel(images)
@@ -131,7 +131,7 @@ def run(config):
         
         else:
           num_accepted += images.shape[0]
-          
+
           x += [images.cpu().numpy()]
           y += [labels.cpu().numpy()]
           
