@@ -14,11 +14,11 @@
 ###  the following parameters will get you two nodes with 4 V100's each
 ###  note the run time limit is currently only 12 hours, it will be increased
 ###  next week
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --mem=500g
+#SBATCH --mem=1T
 #SBATCH --time=24:00:00
 #SBATCH -p sched_system_all 
 
@@ -78,7 +78,7 @@ python sample_pixel.py \
 --use_multiepoch_sampler --num_epochs=100 \
 --resume --load_weights copy0 \
 --experiment_name BigGAN_I64_hdf5_seed0_Gch64_Dch64_bs128_nDa4_nGa4_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
---G_batch_size 512 --sample_trunc_curves 0.05_0.05_1.0 --sample_npz --sample_random --sample_num_npz 50000 --z_var 1.0
+--G_batch_size 512 --sample_npz --sample_num_npz 50000 --z_var 1.0 --rejection 0.95
 
 echo "Run completed at:- "
 date

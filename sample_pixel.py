@@ -95,15 +95,39 @@ def run(config):
   
   # Sample a number of images and save them to an NPZ, for use with TF-Inception
   if config['sample_npz']:
+    if config['rejection'] > 0.0:
+        # Rejection sampling model (Inception V3)
+        utils.eprint('Setting up rejection model at {}'.format(config['rejection']))
+        rejection_model = torch.hub.load('pytorch/vision:v0.6.0', 'inception_v3', pretrained=True)
+        rejection_model = rejection_model.to('cuda:1')
+
     # Lists to hold images and labels for images
     x, y = [], []
     print('Sampling %d images and saving them to npz...' % config['sample_num_npz'])
     for i in trange(int(np.ceil(config['sample_num_npz'] / float(G_batch_size)))):
       with torch.no_grad():
         images, labels = sample()
+        images = utils.denormalize_pixel(images)
       # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
-      x += [utils.denormalize_pixel(images.cpu().numpy())]
-      y += [labels.cpu().numpy()]
+        if config['rejection'] > 0.0:
+          images_rej = F.interpolate(images, 299)
+          images_rej = utils.normalize_batch(images_rej, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+          outputs = rejection_model(images_rej.to('cuda:1'))[0]
+          outputs = torch.nn.functional.softmax(outputs, dim=1)
+
+          max_vals, max_idx = torch.max(outputs, dim=1)
+          accepted_idx = max_vals > config['rejection']
+          accepted = outputs[accepted_idx]
+          num_accepted += accepted.shape[0]
+          
+          # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
+          x += [images[accepted_idx].cpu().numpy()]
+          y += [labels[accepted_idx].cpu().numpy()]
+        
+        else:
+          x += [images.cpu().numpy()]
+          y += [labels.cpu().numpy()]
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
