@@ -103,8 +103,11 @@ def run(config):
 
     # Lists to hold images and labels for images
     x, y = [], []
+    num_accepted = 0
+    pbar = tqdm(total=config['sample_num_npz'])
+
+    while num_accepted < config['sample_num_npz']:
     print('Sampling %d images and saving them to npz...' % config['sample_num_npz'])
-    for i in trange(int(np.ceil(config['sample_num_npz'] / float(G_batch_size)))):
       with torch.no_grad():
         images, labels = sample()
         images = utils.denormalize_pixel(images)
@@ -124,10 +127,16 @@ def run(config):
           # x += [np.uint8(255 * (images.cpu().numpy() + 1) / 2.)]
           x += [images[accepted_idx].cpu().numpy()]
           y += [labels[accepted_idx].cpu().numpy()]
+          pbar.update(accepted.shape[0])
         
         else:
+          num_accepted += images.shape[0]
+          
           x += [images.cpu().numpy()]
           y += [labels.cpu().numpy()]
+          
+          pbar.update(images.shape[0])
+
     x = np.concatenate(x, 0)[:config['sample_num_npz']]
     y = np.concatenate(y, 0)[:config['sample_num_npz']]    
     print('Images shape: %s, Labels shape: %s' % (x.shape, y.shape))
