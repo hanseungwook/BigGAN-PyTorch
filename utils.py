@@ -389,7 +389,7 @@ def add_sample_parser(parser):
     '--sample_class_rejection', action='store_true', default=False,
     help='Produce class-conditional samples with rejection model (default: %(default)s)')
   parser.add_argument(
-    '--rejection', action='store_true', default=0.0,
+    '--rejection', type=float, default=0.0,
     help='Level of rejection sampling (default: %(default)s)')
   parser.add_argument(
     '--sample_interps', action='store_true', default=False,
