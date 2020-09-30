@@ -79,7 +79,7 @@ python sample_wt.py \
 --use_multiepoch_sampler --num_epochs=100 \
 --resume --load_weights copy1 \
 --experiment_name BigGAN_WT64_BigGANdeep_seed0_Gch128_Dch128_Gd2_Dd2_bs256_nDa2_nGa2_Glr1.0e-04_Dlr4.0e-04_Gnlinplace_relu_Dnlinplace_relu_Ginitortho_Dinitortho_Gattn32_Dattn32_Gshared_hier_ema \
---G_batch_size 512 --sample_trunc_curves 0.05_0.05_1.0 --sample_class_rejection --z_var 1.0
+--G_batch_size 512 --z_var 0.6 --sample_npz --sample_num_npz 50000
 
 echo "Run completed at:- "
 date
